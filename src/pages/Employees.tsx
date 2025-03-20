@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -12,10 +12,16 @@ import {
   Trash2, 
   Filter, 
   MoreHorizontal, 
-  CalendarDays, 
+  CalendarDays,
   UserPlus,
-  UserCog
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +46,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { EmployeeForm, EmployeeFormValues } from '@/components/employees/EmployeeForm';
 
 // Mock employee data
 const employeesData = [
@@ -50,7 +58,7 @@ const employeesData = [
     email: 'john.doe@example.com',
     phone: '(555) 123-4567',
     availability: 'Full-Time',
-    status: 'Active',
+    avatarUrl: '',
   },
   {
     id: 2,
@@ -58,7 +66,7 @@ const employeesData = [
     email: 'jane.smith@example.com',
     phone: '(555) 987-6543',
     availability: 'Part-Time',
-    status: 'Active',
+    avatarUrl: '',
   },
   {
     id: 3,
@@ -66,7 +74,7 @@ const employeesData = [
     email: 'michael.j@example.com',
     phone: '(555) 456-7890',
     availability: 'Weekends Only',
-    status: 'Inactive',
+    avatarUrl: '',
   },
   {
     id: 4,
@@ -74,7 +82,7 @@ const employeesData = [
     email: 'emily.w@example.com',
     phone: '(555) 789-0123',
     availability: 'Full-Time',
-    status: 'Active',
+    avatarUrl: '',
   },
   {
     id: 5,
@@ -82,7 +90,7 @@ const employeesData = [
     email: 'david.b@example.com',
     phone: '(555) 234-5678',
     availability: 'Evenings Only',
-    status: 'Active',
+    avatarUrl: '',
   },
 ];
 
@@ -92,6 +100,10 @@ const Employees = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const isMobile = useIsMobile();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
 
   // Filter employees based on search term
   const filteredEmployees = employees.filter((employee) =>
@@ -105,6 +117,35 @@ const Employees = () => {
   const indexOfFirstEmployee = indexOfLastEmployee - itemsPerPage;
   const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+
+  // Handle add employee
+  const handleAddEmployee = (data: EmployeeFormValues) => {
+    const newEmployee = {
+      id: employees.length + 1,
+      ...data,
+      avatarUrl: '',
+    };
+    setEmployees([...employees, newEmployee]);
+    setIsAddDialogOpen(false);
+  };
+
+  // Handle edit employee
+  const handleEditEmployee = (data: EmployeeFormValues) => {
+    const updatedEmployees = employees.map(emp => 
+      emp.id === selectedEmployee.id ? { ...emp, ...data } : emp
+    );
+    setEmployees(updatedEmployees);
+    setIsEditDialogOpen(false);
+    setSelectedEmployee(null);
+  };
+
+  // Handle delete employee
+  const handleDeleteEmployee = () => {
+    const updatedEmployees = employees.filter(emp => emp.id !== selectedEmployee.id);
+    setEmployees(updatedEmployees);
+    setIsDeleteDialogOpen(false);
+    setSelectedEmployee(null);
+  };
 
   return (
     <PageContainer
@@ -128,7 +169,7 @@ const Employees = () => {
             <Filter className="h-4 w-4 mr-2" />
             Filters
           </Button>
-          <Button className="flex-1 sm:flex-none">
+          <Button className="flex-1 sm:flex-none" onClick={() => setIsAddDialogOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add Employee
           </Button>
@@ -142,31 +183,30 @@ const Employees = () => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead>Name</TableHead>
+                  <TableHead>Employee</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Availability</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentEmployees.map((employee) => (
                   <TableRow key={employee.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium">{employee.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={employee.avatarUrl} alt={employee.name} />
+                          <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{employee.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{employee.email}</TableCell>
                     <TableCell className="text-muted-foreground">{employee.phone}</TableCell>
                     <TableCell>
-                      <Badge variant={employee.availability === 'Full-Time' ? 'default' : 'outline'} className="font-normal">
+                      <Badge variant="outline" className="font-normal">
                         {employee.availability}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={employee.status === 'Active' ? 'default' : 'outline'}
-                        className={`font-normal ${employee.status === 'Active' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`}
-                      >
-                        {employee.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -180,7 +220,10 @@ const Employees = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedEmployee(employee);
+                            setIsEditDialogOpen(true);
+                          }}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
@@ -189,7 +232,13 @@ const Employees = () => {
                             View Schedule
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => {
+                              setSelectedEmployee(employee);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
@@ -248,36 +297,35 @@ const Employees = () => {
         <div className="space-y-4">
           {currentEmployees.map((employee) => (
             <Card key={employee.id} className="overflow-hidden">
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-lg">{employee.name}</h3>
-                  <Badge 
-                    variant={employee.status === 'Active' ? 'default' : 'outline'}
-                    className={`font-normal ${employee.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-                  >
-                    {employee.status}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center text-muted-foreground">
-                    <span className="mr-2">Email:</span>
-                    <span>{employee.email}</span>
-                  </div>
-                  <div className="flex items-center text-muted-foreground">
-                    <span className="mr-2">Phone:</span>
-                    <span>{employee.phone}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-2 text-muted-foreground">Availability:</span>
-                    <Badge variant="outline" className="font-normal">
-                      {employee.availability}
-                    </Badge>
+              <CardContent className="p-4">
+                <div className="flex items-start gap-4">
+                  <Avatar className="h-14 w-14 border border-primary/10">
+                    <AvatarImage src={employee.avatarUrl} alt={employee.name} />
+                    <AvatarFallback className="text-lg">{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">{employee.name}</h3>
+                    <div className="space-y-1 mt-1 text-sm">
+                      <div className="flex items-center text-muted-foreground">
+                        <span>{employee.email}</span>
+                      </div>
+                      <div className="flex items-center text-muted-foreground">
+                        <span>{employee.phone}</span>
+                      </div>
+                      <div className="flex items-center pt-1">
+                        <Badge variant="outline" className="font-normal">
+                          {employee.availability}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
                 <div className="flex mt-4 pt-3 border-t">
-                  <Button variant="ghost" size="sm" className="flex-1">
+                  <Button variant="ghost" size="sm" className="flex-1" onClick={() => {
+                    setSelectedEmployee(employee);
+                    setIsEditDialogOpen(true);
+                  }}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
@@ -285,12 +333,20 @@ const Employees = () => {
                     <CalendarDays className="h-4 w-4 mr-2" />
                     Schedule
                   </Button>
-                  <Button variant="ghost" size="sm" className="flex-1 text-red-600">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex-1 text-red-600"
+                    onClick={() => {
+                      setSelectedEmployee(employee);
+                      setIsDeleteDialogOpen(true);
+                    }}
+                  >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete
                   </Button>
                 </div>
-              </div>
+              </CardContent>
             </Card>
           ))}
           
@@ -327,6 +383,66 @@ const Employees = () => {
           )}
         </div>
       )}
+
+      {/* Add Employee Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New Employee</DialogTitle>
+            <DialogDescription>
+              Enter the details for the new employee below.
+            </DialogDescription>
+          </DialogHeader>
+          <EmployeeForm 
+            onSubmit={handleAddEmployee}
+            onCancel={() => setIsAddDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Employee</DialogTitle>
+            <DialogDescription>
+              Update the employee's information below.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedEmployee && (
+            <EmployeeForm 
+              defaultValues={{
+                name: selectedEmployee.name,
+                email: selectedEmployee.email,
+                phone: selectedEmployee.phone,
+                availability: selectedEmployee.availability,
+              }}
+              onSubmit={handleEditEmployee}
+              onCancel={() => setIsEditDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this employee? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteEmployee}>
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 };
