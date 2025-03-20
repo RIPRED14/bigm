@@ -68,19 +68,21 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Avatar Upload Section */}
-        <div className="space-y-3">
-          <Label>Employee Avatar</Label>
-          <div className="flex flex-col items-center gap-4 sm:flex-row">
-            <Avatar className="h-24 w-24 border-2 border-primary/20">
-              <AvatarImage src={avatarUrl} alt="Avatar" />
-              <AvatarFallback className="text-xl">
-                {form.watch('name') ? form.watch('name').charAt(0).toUpperCase() : <UserCog />}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-1 flex-col gap-2">
-              <Label htmlFor="avatar" className="cursor-pointer">
-                <div className="flex h-9 items-center justify-center rounded-md border border-input bg-background px-3 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground">
-                  Choose Image
+        <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-muted/30 rounded-lg border">
+          <Avatar className="h-20 w-20 border-2 border-primary/20">
+            <AvatarImage src={avatarUrl} alt="Avatar" />
+            <AvatarFallback className="text-lg bg-primary/10">
+              {form.watch('name') ? form.watch('name').charAt(0).toUpperCase() : <UserCog className="h-6 w-6 text-primary/60" />}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 space-y-2 text-center sm:text-left">
+            <Label htmlFor="avatar" className="text-base font-medium block mb-1">
+              Employee Photo
+            </Label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Label htmlFor="avatar" className="cursor-pointer inline-flex w-full sm:w-auto">
+                <div className="flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
+                  Upload Image
                 </div>
                 <Input 
                   id="avatar" 
@@ -90,78 +92,80 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
                   onChange={handleImageUpload}
                 />
               </Label>
-              <FormDescription>
-                Upload a profile picture for this employee.
-              </FormDescription>
+              <p className="text-xs text-muted-foreground">
+                Upload a professional photo (JPEG, PNG, max 5MB)
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Name Field */}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Full Name</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid gap-6 sm:grid-cols-2">
+          {/* Name Field */}
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="John Doe" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Email Field */}
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="john.doe@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Email Field */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="john.doe@example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Phone Field */}
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="(555) 123-4567" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Phone Field */}
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input placeholder="(555) 123-4567" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Availability Field */}
-        <FormField
-          control={form.control}
-          name="availability"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Availability</FormLabel>
-              <FormControl>
-                <Input placeholder="Full-Time, Weekends Only, etc." {...field} />
-              </FormControl>
-              <FormDescription>
-                Specify when this employee is available to work (e.g., Full-Time, Weekends Only, Evenings)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          {/* Availability Field */}
+          <FormField
+            control={form.control}
+            name="availability"
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FormLabel>Availability</FormLabel>
+                <FormControl>
+                  <Input placeholder="Full-Time, Weekends Only, etc." {...field} />
+                </FormControl>
+                <FormDescription>
+                  Specify when this employee is available to work (e.g., Full-Time, Weekends Only, Evenings)
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         {/* Form Actions */}
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>

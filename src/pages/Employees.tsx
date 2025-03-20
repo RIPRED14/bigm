@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
@@ -50,8 +49,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { EmployeeForm, EmployeeFormValues } from '@/components/employees/EmployeeForm';
 
-// Mock employee data
-const employeesData = [
+interface Employee {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  availability: string;
+  avatarUrl: string;
+}
+
+const employeesData: Employee[] = [
   {
     id: 1,
     name: 'John Doe',
@@ -96,51 +103,61 @@ const employeesData = [
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [employees, setEmployees] = useState(employeesData);
+  const [employees, setEmployees] = useState<Employee[]>(employeesData);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const isMobile = useIsMobile();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
-  // Filter employees based on search term
   const filteredEmployees = employees.filter((employee) =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     employee.phone.includes(searchTerm)
   );
 
-  // Get current employees for pagination
   const indexOfLastEmployee = currentPage * itemsPerPage;
   const indexOfFirstEmployee = indexOfLastEmployee - itemsPerPage;
   const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
 
-  // Handle add employee
   const handleAddEmployee = (data: EmployeeFormValues) => {
-    const newEmployee = {
+    const newEmployee: Employee = {
       id: employees.length + 1,
-      ...data,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      availability: data.availability,
       avatarUrl: '',
     };
     setEmployees([...employees, newEmployee]);
     setIsAddDialogOpen(false);
   };
 
-  // Handle edit employee
   const handleEditEmployee = (data: EmployeeFormValues) => {
+    if (!selectedEmployee) return;
+    
     const updatedEmployees = employees.map(emp => 
-      emp.id === selectedEmployee.id ? { ...emp, ...data } : emp
+      emp.id === selectedEmployee.id 
+        ? { 
+            ...emp, 
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            availability: data.availability
+          } 
+        : emp
     );
     setEmployees(updatedEmployees);
     setIsEditDialogOpen(false);
     setSelectedEmployee(null);
   };
 
-  // Handle delete employee
   const handleDeleteEmployee = () => {
+    if (!selectedEmployee) return;
+    
     const updatedEmployees = employees.filter(emp => emp.id !== selectedEmployee.id);
     setEmployees(updatedEmployees);
     setIsDeleteDialogOpen(false);
@@ -152,7 +169,6 @@ const Employees = () => {
       title="Employee Management"
       description="View and manage your restaurant staff information."
     >
-      {/* Search and Filter Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="relative w-full sm:w-96">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -176,7 +192,6 @@ const Employees = () => {
         </div>
       </div>
 
-      {/* Desktop View */}
       {!isMobile && (
         <Card className="shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -292,7 +307,6 @@ const Employees = () => {
         </Card>
       )}
       
-      {/* Mobile View - Card-based layout */}
       {isMobile && (
         <div className="space-y-4">
           {currentEmployees.map((employee) => (
@@ -384,7 +398,6 @@ const Employees = () => {
         </div>
       )}
 
-      {/* Add Employee Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -400,7 +413,6 @@ const Employees = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Employee Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -424,7 +436,6 @@ const Employees = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
