@@ -5,11 +5,59 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { Download, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, UserPlus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { EmployeeForm, EmployeeFormValues } from '@/components/employees/EmployeeForm';
+import { toast } from 'sonner';
+
+// Types
+interface Shift {
+  employeeId: number;
+  day: number;
+  startTime: string;
+  endTime: string;
+  status: 'confirmed' | 'pending' | 'conflict' | 'absence';
+}
+
+interface Employee {
+  id: number;
+  name: string;
+}
 
 const Planning = () => {
-  // Sample data for weekly shifts
+  // State
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
+  const [isAddShiftDialogOpen, setIsAddShiftDialogOpen] = useState(false);
+  const [isAddEmployeeDialogOpen, setIsAddEmployeeDialogOpen] = useState(false);
+
+  // Sample employees
+  const [employees, setEmployees] = useState<Employee[]>([
+    { id: 1, name: 'John Doe' },
+    { id: 2, name: 'Jane Smith' },
+    { id: 3, name: 'Michael Johnson' },
+    { id: 4, name: 'Emily Wilson' },
+    { id: 5, name: 'David Brown' },
+  ]);
+
+  // Sample shifts
+  const [shifts, setShifts] = useState<Shift[]>([
+    { employeeId: 1, day: 0, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
+    { employeeId: 2, day: 0, startTime: '12:00', endTime: '20:00', status: 'confirmed' },
+    { employeeId: 3, day: 1, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
+    { employeeId: 1, day: 2, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
+    { employeeId: 4, day: 2, startTime: '16:00', endTime: '00:00', status: 'confirmed' },
+    { employeeId: 5, day: 3, startTime: '09:00', endTime: '17:00', status: 'pending' },
+    { employeeId: 2, day: 3, startTime: '12:00', endTime: '20:00', status: 'confirmed' },
+    { employeeId: 1, day: 4, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
+    { employeeId: 3, day: 5, startTime: '12:00', endTime: '20:00', status: 'absence' },
+    { employeeId: 4, day: 6, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
+  ]);
 
   // Generate week dates
   const getWeekDates = (date: Date) => {
@@ -50,29 +98,6 @@ const Planning = () => {
     setCurrentWeek(newDate);
   };
 
-  // Sample employees
-  const employees = [
-    { id: 1, name: 'John Doe' },
-    { id: 2, name: 'Jane Smith' },
-    { id: 3, name: 'Michael Johnson' },
-    { id: 4, name: 'Emily Wilson' },
-    { id: 5, name: 'David Brown' },
-  ];
-
-  // Sample shifts
-  const shifts = [
-    { employeeId: 1, day: 0, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
-    { employeeId: 2, day: 0, startTime: '12:00', endTime: '20:00', status: 'confirmed' },
-    { employeeId: 3, day: 1, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
-    { employeeId: 1, day: 2, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
-    { employeeId: 4, day: 2, startTime: '16:00', endTime: '00:00', status: 'confirmed' },
-    { employeeId: 5, day: 3, startTime: '09:00', endTime: '17:00', status: 'pending' },
-    { employeeId: 2, day: 3, startTime: '12:00', endTime: '20:00', status: 'confirmed' },
-    { employeeId: 1, day: 4, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
-    { employeeId: 3, day: 5, startTime: '12:00', endTime: '20:00', status: 'absence' },
-    { employeeId: 4, day: 6, startTime: '09:00', endTime: '17:00', status: 'confirmed' },
-  ];
-
   // Get shift for employee and day
   const getShift = (employeeId: number, day: number) => {
     return shifts.find(shift => shift.employeeId === employeeId && shift.day === day);
@@ -92,6 +117,18 @@ const Planning = () => {
       default:
         return 'bg-blue-100 text-blue-800 border-blue-200';
     }
+  };
+
+  // Add a new employee
+  const handleAddEmployee = (data: EmployeeFormValues) => {
+    const newEmployee = {
+      id: employees.length > 0 ? Math.max(...employees.map(e => e.id)) + 1 : 1,
+      name: data.name
+    };
+    
+    setEmployees([...employees, newEmployee]);
+    setIsAddEmployeeDialogOpen(false);
+    toast.success(`Employee ${data.name} added successfully`);
   };
 
   return (
@@ -120,9 +157,13 @@ const Planning = () => {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button className="flex-1 sm:flex-none">
+          <Button className="flex-1 sm:flex-none" onClick={() => setIsAddShiftDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Shift
+          </Button>
+          <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => setIsAddEmployeeDialogOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add Employee
           </Button>
         </div>
       </div>
@@ -211,6 +252,51 @@ const Planning = () => {
           <span className="text-sm">Absence</span>
         </div>
       </div>
+
+      {/* Add Shift Dialog */}
+      <Dialog open={isAddShiftDialogOpen} onOpenChange={setIsAddShiftDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New Shift</DialogTitle>
+            <DialogDescription>
+              Assign a shift to an employee.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {/* Add shift form would go here */}
+            <p className="text-center text-muted-foreground py-4">
+              Shift assignment form will be implemented here.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setIsAddShiftDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => {
+                setIsAddShiftDialogOpen(false);
+                toast.success("Shift added successfully");
+              }}>
+                Save Shift
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Employee Dialog */}
+      <Dialog open={isAddEmployeeDialogOpen} onOpenChange={setIsAddEmployeeDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New Employee</DialogTitle>
+            <DialogDescription>
+              Enter the details for the new employee below.
+            </DialogDescription>
+          </DialogHeader>
+          <EmployeeForm 
+            onSubmit={handleAddEmployee}
+            onCancel={() => setIsAddEmployeeDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 };

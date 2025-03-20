@@ -66,22 +66,22 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Avatar Upload Section */}
-        <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-muted/30 rounded-lg border">
-          <Avatar className="h-20 w-20 border-2 border-primary/20">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+        {/* Avatar Upload Section - more compact */}
+        <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg border">
+          <Avatar className="h-16 w-16 border-2 border-primary/20">
             <AvatarImage src={avatarUrl} alt="Avatar" />
             <AvatarFallback className="text-lg bg-primary/10">
-              {form.watch('name') ? form.watch('name').charAt(0).toUpperCase() : <UserCog className="h-6 w-6 text-primary/60" />}
+              {form.watch('name') ? form.watch('name').charAt(0).toUpperCase() : <UserCog className="h-5 w-5 text-primary/60" />}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 space-y-2 text-center sm:text-left">
-            <Label htmlFor="avatar" className="text-base font-medium block mb-1">
+          <div className="flex-1 space-y-1">
+            <Label htmlFor="avatar" className="text-sm font-medium block">
               Employee Photo
             </Label>
             <div className="flex flex-col sm:flex-row gap-2">
               <Label htmlFor="avatar" className="cursor-pointer inline-flex w-full sm:w-auto">
-                <div className="flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
+                <div className="flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
                   Upload Image
                 </div>
                 <Input 
@@ -93,13 +93,13 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
                 />
               </Label>
               <p className="text-xs text-muted-foreground">
-                Upload a professional photo (JPEG, PNG, max 5MB)
+                JPEG, PNG (max 5MB)
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           {/* Name Field */}
           <FormField
             control={form.control}
@@ -156,7 +156,7 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
                   <Input placeholder="Full-Time, Weekends Only, etc." {...field} />
                 </FormControl>
                 <FormDescription>
-                  Specify when this employee is available to work (e.g., Full-Time, Weekends Only, Evenings)
+                  Specify when this employee is available to work
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -164,12 +164,12 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
           />
         </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        {/* Form Actions - sticky at bottom */}
+        <div className="flex justify-end gap-3 pt-2 sticky bottom-0 bg-background pb-2">
+          <Button type="button" variant="outline" onClick={onCancel} size="sm">
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" size="sm">
             Save Employee
           </Button>
         </div>
