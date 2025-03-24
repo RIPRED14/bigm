@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -17,6 +16,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserCog } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Define the validation schema
 const employeeFormSchema = z.object({
@@ -26,19 +32,37 @@ const employeeFormSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
-  phone: z.string().min(7, {
-    message: "Please enter a valid phone number.",
-  }),
+  phone: z.string()
+    .min(7, { message: "Phone number must be at least 7 characters." })
+    .max(20, { message: "Phone number is too long." })
+    .refine(
+      (value) => {
+        // Accepte les formats: (123) 456-7890, 123-456-7890, 123.456.7890, ou 1234567890
+        const phoneRegex = /^(\+\d{1,3}\s?)?(\(\d{3}\)\s?|\d{3}[-.\s]?)?\d{3}[-.\s]?\d{4}$/;
+        return phoneRegex.test(value);
+      },
+      { message: "Please enter a valid phone number format." }
+    ),
   availability: z.string().min(1, {
     message: "Please specify availability.",
   }),
 });
 
+// Availability options
+const availabilityOptions = [
+  { value: "Full-Time", label: "Full-Time" },
+  { value: "Part-Time", label: "Part-Time" },
+  { value: "Weekends Only", label: "Weekends Only" },
+  { value: "Evenings Only", label: "Evenings Only" },
+  { value: "Mornings Only", label: "Mornings Only" },
+  { value: "On-Call", label: "On-Call" },
+];
+
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
 
 interface EmployeeFormProps {
-  defaultValues?: Partial<EmployeeFormValues>;
-  onSubmit: (data: EmployeeFormValues) => void;
+  defaultValues?: Partial<EmployeeFormValues> & { avatarUrl?: string };
+  onSubmit: (data: EmployeeFormValues & { avatarUrl?: string }) => void;
   onCancel: () => void;
 }
 
@@ -53,7 +77,28 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
     },
   });
 
-  const [avatarUrl, setAvatarUrl] = React.useState<string>('');
+  const [avatarUrl, setAvatarUrl] = React.useState<string>(defaultValues?.avatarUrl || '');
+
+  // Format phone number while typing
+  const formatPhoneNumber = (value: string) => {
+    // Retirer tout ce qui n'est pas un chiffre
+    const digits = value.replace(/\D/g, '');
+
+    // Appliquer le format selon le nombre de chiffres
+    if (digits.length <= 3) {
+      return digits;
+    } else if (digits.length <= 6) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    } else {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+    }
+  };
+
+  // Handle phone number change
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatPhoneNumber(e.target.value);
+    form.setValue('phone', formattedValue, { shouldValidate: true });
+  };
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,9 +109,17 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
     }
   };
 
+  // Handle form submission with avatar
+  const handleSubmit = (data: EmployeeFormValues) => {
+    onSubmit({
+      ...data,
+      avatarUrl: avatarUrl
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
         {/* Avatar Upload Section - more compact */}
         <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg border">
           <Avatar className="h-16 w-16 border-2 border-primary/20">
@@ -138,7 +191,14 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="(555) 123-4567" {...field} />
+                  <Input 
+                    placeholder="(555) 123-4567" 
+                    value={field.value}
+                    onChange={handlePhoneChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    ref={field.ref}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -152,9 +212,23 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
                 <FormLabel>Availability</FormLabel>
-                <FormControl>
-                  <Input placeholder="Full-Time, Weekends Only, etc." {...field} />
-                </FormControl>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select availability" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {availabilityOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormDescription>
                   Specify when this employee is available to work
                 </FormDescription>

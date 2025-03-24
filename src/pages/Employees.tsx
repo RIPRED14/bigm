@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import PageContainer from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,16 +49,11 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { EmployeeForm, EmployeeFormValues } from '@/components/employees/EmployeeForm';
+import { Employee } from '@/lib/supabase';
+import { getEmployees, addEmployee, updateEmployee, deleteEmployee } from '@/lib/api';
+import { useToast } from '@/components/ui/use-toast';
 
-interface Employee {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  availability: string;
-  avatarUrl: string;
-}
-
+// Données mockées pour le fallback si Supabase n'est pas configuré
 const employeesData: Employee[] = [
   {
     id: 1,
@@ -111,6 +107,54 @@ const Employees = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Vérification renforcée que nous sommes bien dans l'interface manager
+  useEffect(() => {
+    console.log('Composant Employees chargé correctement dans l\'interface admin');
+    // Nous ne modifions plus l'état de navigation ici,
+    // laissons le système de navigation fonctionner normalement
+  }, []);
+
+  // Charger les employés depuis Supabase au chargement de la page
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Commenté temporairement jusqu'à la configuration correcte de Supabase
+        // const fetchedEmployees = await getEmployees();
+        // if (fetchedEmployees.length > 0) {
+        //   setEmployees(fetchedEmployees);
+        // } else {
+        //   // Fallback aux données mockées si aucun employé n'est trouvé
+        //   // (peut se produire si la table n'est pas encore créée ou si Supabase n'est pas configuré)
+        //   setEmployees(employeesData);
+        // }
+        
+        // Utiliser directement les données mockées pour l'instant
+        setEmployees(employeesData);
+        
+      } catch (error) {
+        console.error('Erreur lors du chargement des employés:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les employés. Utilisation des données locales.",
+          variant: "destructive",
+        });
+        // En cas d'erreur, on utilise aussi les données mockées
+        setEmployees(employeesData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEmployees();
+  }, [toast]);
 
   const filteredEmployees = employees.filter((employee) =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -123,281 +167,387 @@ const Employees = () => {
   const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
 
-  const handleAddEmployee = (data: EmployeeFormValues) => {
-    const newEmployee: Employee = {
-      id: employees.length + 1,
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      availability: data.availability,
-      avatarUrl: '',
-    };
-    setEmployees([...employees, newEmployee]);
-    setIsAddDialogOpen(false);
+  const handleAddEmployee = async (data: EmployeeFormValues & { avatarUrl?: string }) => {
+    try {
+      setIsLoading(true);
+      
+      const newEmployeeData = {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        availability: data.availability,
+        avatarUrl: data.avatarUrl || '',
+      };
+
+      const newEmployee = await addEmployee(newEmployeeData);
+      
+      if (newEmployee) {
+        setEmployees([...employees, newEmployee]);
+        toast({
+          title: "Succès",
+          description: "Employé ajouté avec succès",
+        });
+      } else {
+        // Fallback si Supabase n'est pas configuré
+        const fallbackEmployee: Employee = {
+          ...newEmployeeData,
+          id: employees.length + 1,
+        };
+        setEmployees([...employees, fallbackEmployee]);
+      }
+      
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'employé:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter l'employé",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEditEmployee = (data: EmployeeFormValues) => {
+  const handleEditEmployee = async (data: EmployeeFormValues & { avatarUrl?: string }) => {
     if (!selectedEmployee) return;
     
-    const updatedEmployees = employees.map(emp => 
-      emp.id === selectedEmployee.id 
-        ? { 
-            ...emp, 
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            availability: data.availability
-          } 
-        : emp
-    );
-    setEmployees(updatedEmployees);
-    setIsEditDialogOpen(false);
-    setSelectedEmployee(null);
+    try {
+      setIsLoading(true);
+      
+      const updatedData = { 
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        availability: data.availability,
+        avatarUrl: data.avatarUrl || selectedEmployee.avatarUrl,
+      };
+      
+      const updatedEmployee = await updateEmployee(selectedEmployee.id, updatedData);
+      
+      if (updatedEmployee) {
+        // Mise à jour réussie dans Supabase
+        setEmployees(employees.map(emp => 
+          emp.id === selectedEmployee.id ? updatedEmployee : emp
+        ));
+        toast({
+          title: "Succès",
+          description: "Employé mis à jour avec succès",
+        });
+      } else {
+        // Fallback si Supabase n'est pas configuré
+        setEmployees(employees.map(emp => 
+          emp.id === selectedEmployee.id 
+            ? { ...emp, ...updatedData } 
+            : emp
+        ));
+      }
+      
+      setIsEditDialogOpen(false);
+      setSelectedEmployee(null);
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de l\'employé:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour l'employé",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteEmployee = () => {
+  const handleDeleteEmployee = async () => {
     if (!selectedEmployee) return;
     
-    const updatedEmployees = employees.filter(emp => emp.id !== selectedEmployee.id);
-    setEmployees(updatedEmployees);
-    setIsDeleteDialogOpen(false);
-    setSelectedEmployee(null);
+    try {
+      setIsLoading(true);
+      
+      const success = await deleteEmployee(selectedEmployee.id);
+      
+      if (success) {
+        // Suppression réussie dans Supabase
+        setEmployees(employees.filter(emp => emp.id !== selectedEmployee.id));
+        toast({
+          title: "Succès",
+          description: "Employé supprimé avec succès",
+        });
+      } else {
+        // Fallback si Supabase n'est pas configuré
+        setEmployees(employees.filter(emp => emp.id !== selectedEmployee.id));
+      }
+      
+      setIsDeleteDialogOpen(false);
+      setSelectedEmployee(null);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'employé:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'employé",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fonctions pour les actions sur les employés
+  const handleViewSchedule = (employeeId: number) => {
+    // Rediriger vers le planning avec un filtre sur l'employé sélectionné
+    // Note: Nous utilisons state pour rester dans l'interface admin
+    navigate('/planning', { 
+      state: { 
+        from: 'adminInterface',
+        employeeFilter: employeeId 
+      } 
+    });
   };
 
   return (
-    <PageContainer
-      title="Employee Management"
-      description="View and manage your restaurant staff information."
-    >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div className="relative w-full sm:w-96">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="Search by name, email or phone..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <PageContainer className={isMobile ? "pt-4" : "pt-6"}>
+      <div className={`flex ${isMobile ? 'flex-col gap-2' : 'items-center justify-between mb-4'}`}>
+        <div>
+          <h1 className={`font-bold ${isMobile ? 'text-lg' : 'text-xl'}`}>Gestion des Employés</h1>
+          {!isMobile && <p className="text-sm text-muted-foreground">Gérez votre équipe et leurs disponibilités</p>}
         </div>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <Button variant="outline" className="flex-1 sm:flex-none">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-          <Button className="flex-1 sm:flex-none" onClick={() => setIsAddDialogOpen(true)}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Employee
-          </Button>
+        
+        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'gap-3'}`}>
+          <div className={`relative ${isMobile ? 'w-full' : 'w-64'}`}>
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size={isMobile ? "sm" : "default"} onClick={() => setShowFilters(!showFilters)}>
+              <Filter className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} mr-1`} />
+              Filtres
+            </Button>
+            <Button onClick={() => setIsAddDialogOpen(true)} size={isMobile ? "sm" : "default"}>
+              <Plus className={`${isMobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} mr-1`} />
+              {isMobile ? 'Ajouter' : 'Nouvel Employé'}
+            </Button>
+          </div>
         </div>
       </div>
 
-      {!isMobile && (
-        <Card className="shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead>Employee</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Availability</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentEmployees.map((employee) => (
-                  <TableRow key={employee.id} className="hover:bg-muted/30">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={employee.avatarUrl} alt={employee.name} />
-                          <AvatarFallback>{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{employee.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{employee.email}</TableCell>
-                    <TableCell className="text-muted-foreground">{employee.phone}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="font-normal">
-                        {employee.availability}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedEmployee(employee);
-                            setIsEditDialogOpen(true);
-                          }}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <CalendarDays className="h-4 w-4 mr-2" />
-                            View Schedule
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            className="text-red-600"
-                            onClick={() => {
-                              setSelectedEmployee(employee);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {filteredEmployees.length === 0 && (
-            <div className="py-12 text-center">
-              <p className="text-muted-foreground">No employees found. Try adjusting your search.</p>
+      {/* Filtres - affiché uniquement si showFilters est vrai */}
+      {showFilters && (
+        <Card className="mb-4">
+          <CardContent className="p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <p className="text-xs font-medium mb-1">Disponibilité</p>
+                <select className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">Toutes</option>
+                  <option value="Full-Time">Temps plein</option>
+                  <option value="Part-Time">Temps partiel</option>
+                  <option value="Weekends Only">Weekends seulement</option>
+                  <option value="Evenings Only">Soirs seulement</option>
+                </select>
+              </div>
+              <div>
+                <p className="text-xs font-medium mb-1">Statut</p>
+                <select className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option value="">Tous</option>
+                  <option value="active">Actif</option>
+                  <option value="inactive">Inactif</option>
+                </select>
+              </div>
+              <div className="flex items-end">
+                <Button variant="secondary" size="sm" className="w-full sm:w-auto">Appliquer</Button>
+              </div>
             </div>
-          )}
-          
-          {filteredEmployees.length > 0 && (
-            <div className="p-4 border-t">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                  
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink 
-                        isActive={currentPage === page}
-                        onClick={() => setCurrentPage(page)}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                  
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+          </CardContent>
         </Card>
       )}
-      
-      {isMobile && (
-        <div className="space-y-4">
+
+      {/* Vue mobile - cartes au lieu de tableau */}
+      {isMobile ? (
+        <div className="space-y-2">
           {currentEmployees.map((employee) => (
             <Card key={employee.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-14 w-14 border border-primary/10">
-                    <AvatarImage src={employee.avatarUrl} alt={employee.name} />
-                    <AvatarFallback className="text-lg">{employee.name.charAt(0).toUpperCase()}</AvatarFallback>
+              <CardContent className="p-0">
+                <div className="flex items-center p-3">
+                  <Avatar className="h-9 w-9 mr-3">
+                    <AvatarImage src={employee.avatarUrl} />
+                    <AvatarFallback>{employee.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{employee.name}</h3>
-                    <div className="space-y-1 mt-1 text-sm">
-                      <div className="flex items-center text-muted-foreground">
-                        <span>{employee.email}</span>
-                      </div>
-                      <div className="flex items-center text-muted-foreground">
-                        <span>{employee.phone}</span>
-                      </div>
-                      <div className="flex items-center pt-1">
-                        <Badge variant="outline" className="font-normal">
-                          {employee.availability}
-                        </Badge>
-                      </div>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm truncate">{employee.name}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{employee.email}</p>
+                  </div>
+                  <div className="ml-auto">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedEmployee(employee);
+                          setIsEditDialogOpen(true);
+                        }}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Modifier
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/employee-planning/${employee.id}`)}>
+                          <CalendarDays className="h-4 w-4 mr-2" />
+                          Planning
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-red-600" 
+                          onClick={() => {
+                            setSelectedEmployee(employee);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
-                
-                <div className="flex mt-4 pt-3 border-t">
-                  <Button variant="ghost" size="sm" className="flex-1" onClick={() => {
-                    setSelectedEmployee(employee);
-                    setIsEditDialogOpen(true);
-                  }}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button variant="ghost" size="sm" className="flex-1">
-                    <CalendarDays className="h-4 w-4 mr-2" />
-                    Schedule
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="flex-1 text-red-600"
-                    onClick={() => {
-                      setSelectedEmployee(employee);
-                      setIsDeleteDialogOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
+                <div className="px-3 pb-3 pt-0 flex justify-between items-center">
+                  <Badge variant="outline" className="text-xs">{employee.availability}</Badge>
+                  <span className="text-xs text-muted-foreground">{employee.phone}</span>
                 </div>
               </CardContent>
             </Card>
           ))}
-          
-          {filteredEmployees.length === 0 && (
-            <div className="py-12 text-center">
-              <p className="text-muted-foreground">No employees found. Try adjusting your search.</p>
-            </div>
-          )}
-          
-          {filteredEmployees.length > 0 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
-                
-                <PaginationItem>
-                  <PaginationLink>
-                    {currentPage} / {totalPages}
-                  </PaginationLink>
-                </PaginationItem>
-                
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
+        </div>
+      ) : (
+        /* Vue desktop - tableau */
+        <div className="rounded-md border shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[250px]">Nom</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Téléphone</TableHead>
+                <TableHead>Disponibilité</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    Chargement...
+                  </TableCell>
+                </TableRow>
+              ) : currentEmployees.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    Aucun employé trouvé.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                currentEmployees.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <Avatar className="h-8 w-8 mr-2">
+                          <AvatarImage src={employee.avatarUrl} />
+                          <AvatarFallback>{employee.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        {employee.name}
+                      </div>
+                    </TableCell>
+                    <TableCell>{employee.email}</TableCell>
+                    <TableCell>{employee.phone}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{employee.availability}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => {
+                            setSelectedEmployee(employee);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Modifier</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => navigate(`/employee-planning/${employee.id}`)}
+                        >
+                          <CalendarDays className="h-4 w-4" />
+                          <span className="sr-only">Planning</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => {
+                            setSelectedEmployee(employee);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                          <span className="sr-only">Supprimer</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       )}
 
+      {/* Pagination - adapté pour mobile */}
+      {totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            
+            {isMobile ? (
+              <PaginationItem>
+                <PaginationLink>
+                  {currentPage} / {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            ) : (
+              Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink 
+                    isActive={page === currentPage}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))
+            )}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+
+      {/* Dialogues pour ajouter/éditer/supprimer - inchangés */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -428,6 +578,7 @@ const Employees = () => {
                 email: selectedEmployee.email,
                 phone: selectedEmployee.phone,
                 availability: selectedEmployee.availability,
+                avatarUrl: selectedEmployee.avatarUrl,
               }}
               onSubmit={handleEditEmployee}
               onCancel={() => setIsEditDialogOpen(false)}

@@ -1,130 +1,228 @@
-
-import React, { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import React, { useContext } from "react";
+import { Link, NavLink as RouterNavLink, useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { usePathname } from "@/hooks/use-path";
+import { useInterface } from "@/hooks/use-interface";
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 import { 
-  HomeIcon, 
+  CalendarDays, 
+  LayoutDashboard, 
   Users, 
-  Calendar, 
-  Clock, 
-  Bell, 
   Settings,
   Menu,
-  X
-} from 'lucide-react';
+  Smartphone,
+  LogOut
+} from "lucide-react";
+import { AuthContext } from "@/App";
 
-const NavBar = () => {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
+// Utility function for class names
+const cn = (...classes: string[]) => classes.filter(Boolean).join(' ');
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
+export const NavBar: React.FC = () => {
+  const isMobile = useIsMobile();
+  const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const auth = useContext(AuthContext);
+  const navigate = useNavigate();
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    // Close mobile menu when route changes
-    setMobileMenuOpen(false);
-  }, [location]);
-
-  const navItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: HomeIcon },
-    { path: '/employees', label: 'Employees', icon: Users },
-    { path: '/planning', label: 'Planning', icon: Calendar },
-    { path: '/absences', label: 'Absences', icon: Clock },
-    { path: '/notifications', label: 'Notifications', icon: Bell },
-    { path: '/settings', label: 'Settings', icon: Settings },
-  ];
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+  
+  const handleLogout = () => {
+    if (auth) {
+      auth.setIsLoggedIn(false);
+      auth.setInterface(null);
+    }
+    navigate('/login');
+  };
 
   return (
-    <header 
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out',
-        scrolled ? 'bg-white/80 backdrop-blur-md shadow-sm' : 'bg-transparent'
-      )}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4 md:justify-start md:space-x-10">
-          <div className="flex justify-start lg:w-0 lg:flex-1">
-            <a href="/" className="flex items-center">
-              <span className="text-xl font-bold text-primary">Burger Staff Manager</span>
-            </a>
-          </div>
-          
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-            >
-              <span className="sr-only">Open main menu</span>
-              {mobileMenuOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
-              )}
-            </button>
-          </div>
-          
-          {/* Desktop navigation */}
-          <nav className="hidden md:flex space-x-6">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) => cn(
-                  'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200',
-                  isActive
-                    ? 'text-primary bg-primary/5'
-                    : 'text-gray-600 hover:text-primary hover:bg-primary/5'
-                )}
-              >
-                <item.icon className="mr-1.5 h-4 w-4" />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
-          </nav>
+    <nav className={cn(
+      "bg-background border-b border-border sticky top-0 z-50",
+      isMobile ? "px-2 py-2" : "px-4 py-3"
+    )}>
+      <div className={cn(
+        "flex items-center",
+        isMobile ? "justify-between" : "justify-between"
+      )}>
+        <div className="flex items-center">
+          <Logo className="mr-2" />
+          <h1 className={cn(
+            "font-bold text-foreground",
+            isMobile ? "text-lg" : "text-xl"
+          )}>
+            BurgerSync
+          </h1>
         </div>
-      </div>
 
-      {/* Mobile navigation */}
-      <div
-        className={cn(
-          'absolute top-16 inset-x-0 p-2 transition transform origin-top-right md:hidden',
-          mobileMenuOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-        )}
-      >
-        <div className="rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 bg-white divide-y-2 divide-gray-50">
-          <div className="pt-5 pb-6 px-5">
-            <div className="space-y-1 px-2">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) => cn(
-                    'block px-3 py-2 rounded-md text-base font-medium',
-                    isActive
-                      ? 'text-primary bg-primary/5'
-                      : 'text-gray-600 hover:text-primary hover:bg-primary/5'
-                  )}
-                >
-                  <div className="flex items-center">
-                    <item.icon className="mr-2 h-5 w-5" />
-                    <span>{item.label}</span>
-                  </div>
-                </NavLink>
-              ))}
+        {isMobile ? (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMenu}
+              className="ml-auto"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => window.open('/mobile-emulator', '_blank')}
+              className="h-8 w-8" 
+              title="Voir en mode mobile"
+            >
+              <Smartphone className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <MainLinks pathname={pathname} />
+            <div className="flex items-center gap-2 ml-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('/mobile-emulator', '_blank')}
+              >
+                <Smartphone className="h-4 w-4 mr-1" />
+                Vue mobile
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                Déconnexion
+              </Button>
             </div>
           </div>
-        </div>
+        )}
       </div>
-    </header>
+
+      {/* Mobile menu */}
+      {isMobile && menuOpen && (
+        <div className="pt-2 pb-3 space-y-1">
+          <MainLinks pathname={pathname} isMobile={true} />
+          <div className="pt-2 pb-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="w-full justify-start px-3 py-2 text-sm"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Déconnexion
+            </Button>
+          </div>
+        </div>
+      )}
+    </nav>
   );
 };
 
-export default NavBar;
+interface NavLinkProps {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  isMobile?: boolean;
+}
+
+const NavLinkItem: React.FC<NavLinkProps> = ({
+  to,
+  icon,
+  label,
+  active,
+  isMobile
+}) => {
+  const { navigateToAdmin } = useInterface();
+  
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Traitement spécial pour la route "/employees"
+    if (to === "/employees") {
+      console.log('NavBar: Clic sur Employés - forçage interface admin');
+      navigateToAdmin(to);
+      return;
+    }
+    
+    // Utiliser navigateToAdmin pour rester dans l'interface admin
+    navigateToAdmin(to);
+  };
+  
+  return (
+    <div onClick={handleClick} className="block cursor-pointer">
+      <div
+        className={cn(
+          "flex items-center px-3 py-2 rounded-md transition-colors",
+          active
+            ? "bg-primary/10 text-primary"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          isMobile ? "text-sm" : "text-base"
+        )}
+      >
+        {icon}
+        <span className={isMobile ? "ml-2" : "ml-3"}>{label}</span>
+      </div>
+    </div>
+  );
+};
+
+interface MainLinksProps {
+  pathname: string;
+  isMobile?: boolean;
+}
+
+const MainLinks: React.FC<MainLinksProps> = ({ pathname, isMobile = false }) => {
+  const links = [
+    {
+      to: "/dashboard",
+      icon: <LayoutDashboard className={isMobile ? "h-4 w-4" : "h-5 w-5"} />,
+      label: "Dashboard",
+      active: pathname === "/dashboard"
+    },
+    {
+      to: "/employees",
+      icon: <Users className={isMobile ? "h-4 w-4" : "h-5 w-5"} />,
+      label: "Employés",
+      active: pathname === "/employees"
+    },
+    {
+      to: "/planning",
+      icon: <CalendarDays className={isMobile ? "h-4 w-4" : "h-5 w-5"} />,
+      label: "Planning",
+      active: pathname === "/planning"
+    },
+    {
+      to: "/daily-planning",
+      icon: <CalendarDays className={isMobile ? "h-4 w-4" : "h-5 w-5"} />,
+      label: "Planning Jour",
+      active: pathname === "/daily-planning"
+    },
+    {
+      to: "/settings",
+      icon: <Settings className={isMobile ? "h-4 w-4" : "h-5 w-5"} />,
+      label: "Réglages",
+      active: pathname === "/settings"
+    }
+  ];
+
+  return (
+    <div className={isMobile ? "space-y-1" : "flex items-center space-x-2"}>
+      {links.map((link, index) => (
+        <NavLinkItem
+          key={index}
+          to={link.to}
+          icon={link.icon}
+          label={link.label}
+          active={link.active}
+          isMobile={isMobile}
+        />
+      ))}
+    </div>
+  );
+};

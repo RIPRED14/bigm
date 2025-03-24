@@ -1,64 +1,67 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
-interface StatsCardProps {
+export interface StatsCardProps {
   title: string;
-  value: string | number;
-  description?: string;
-  icon?: LucideIcon;
+  value: string;
+  icon?: React.ComponentType<{ className?: string }>;
   trend?: {
     value: number;
     isPositive: boolean;
   };
   className?: string;
+  compact?: boolean;
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
-  description,
   icon: Icon,
   trend,
   className,
+  compact = false,
 }) => {
   return (
-    <div className={cn(
-      'glass-card p-6 flex flex-col',
-      className
-    )}>
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <h3 className="mt-1 text-2xl font-semibold">{value}</h3>
-          
-          {trend && (
-            <div className="flex items-center mt-1">
-              <span
-                className={cn(
-                  'text-xs font-medium flex items-center',
-                  trend.isPositive ? 'text-green-500' : 'text-red-500'
-                )}
-              >
-                {trend.isPositive ? '+' : '-'}{Math.abs(trend.value)}%
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">from last week</span>
+    <Card className={cn("overflow-hidden", className)}>
+      <CardContent className={cn("p-6", compact && "p-3")}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={cn("text-sm font-medium text-muted-foreground", compact && "text-xs")}>
+              {title}
+            </p>
+            <div className="flex items-center gap-2">
+              <h3 className={cn("text-2xl font-bold", compact && "text-xl")}>
+                {value}
+              </h3>
+              {trend && (
+                <span className={cn(
+                  "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium",
+                  trend.isPositive 
+                    ? "text-green-700 bg-green-50" 
+                    : "text-red-700 bg-red-50",
+                  compact && "px-1 py-0.5 text-[10px]"
+                )}>
+                  {trend.isPositive ? '+' : '-'}{trend.value}%
+                </span>
+              )}
+            </div>
+          </div>
+          {Icon && (
+            <div className={cn(
+              "rounded-full p-2 bg-primary/10", 
+              compact && "p-1.5"
+            )}>
+              <Icon className={cn(
+                "h-5 w-5 text-primary",
+                compact && "h-4 w-4"
+              )} />
             </div>
           )}
         </div>
-        
-        {Icon && (
-          <div className="p-3 rounded-full bg-primary/10 text-primary">
-            <Icon className="h-5 w-5" />
-          </div>
-        )}
-      </div>
-      
-      {description && (
-        <p className="mt-3 text-sm text-muted-foreground">{description}</p>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

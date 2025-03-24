@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
@@ -50,6 +49,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ className }) => {
               ) : (
                 <Link
                   to={path}
+                  state={{ from: 'adminInterface' }}
                   className="hover:text-primary transition-colors duration-200"
                 >
                   {getReadableName(segment)}

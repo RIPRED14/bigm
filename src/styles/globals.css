@@ -1,0 +1,116 @@
+/* Optimisations mobiles globales */
+@media (max-width: 640px) {
+  html, body {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  /* Améliorer la taille des boutons pour les doigts */
+  button, 
+  .button,
+  [role="button"],
+  a.button,
+  [type="button"],
+  [type="submit"],
+  [type="reset"] {
+    min-height: 40px; /* Taille tactile minimale recommandée */
+    min-width: 44px;
+  }
+  
+  /* Espacements adaptés au mobile */
+  .container, .page-container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 0.5rem !important;
+  }
+  
+  /* Optimiser les inputs */
+  input, 
+  textarea,
+  select {
+    font-size: 16px !important; /* Évite le zoom iOS automatique */
+  }
+  
+  /* Optimiser les tableaux pour petits écrans */
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ajuster les grilles */
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  /* Ajuster les cartes */
+  .card {
+    border-radius: 0.5rem !important;
+  }
+  
+  /* Réduire les espacements excessifs */
+  .space-y-8 {
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Optimiser les dialogues */
+  .dialog-content,
+  [role="dialog"] {
+    width: calc(100% - 2rem) !important;
+    max-width: 90vw !important;
+  }
+  
+  /* Cacher les éléments sur mobile */
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  /* Afficher les éléments sur mobile */
+  .show-on-mobile {
+    display: block !important;
+  }
+}
+
+/* Classes par défaut pour mobiles (utilisées avant media query) */
+.hide-on-mobile {
+  display: inherit;
+}
+
+.show-on-mobile {
+  display: none;
+}
+
+/* Optimisations pour les boutons de navigation mobile */
+.mobile-nav-button {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 50;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--primary);
+  color: white;
+}
+
+/* Ajouter des transitions douces pour une expérience utilisateur améliorée */
+.smooth-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Améliorer l'accessibilité au focus */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

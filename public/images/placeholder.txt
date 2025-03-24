@@ -1,0 +1,27 @@
+# Images pour BurgerStaffSync
+
+Pour compléter l'application avec des images professionnelles, veuillez télécharger des images dans ce dossier avec les noms suivants :
+
+1. `dashboard-preview.jpg` - Image du tableau de bord pour la page d'accueil
+2. `manager-interface.jpg` - Image de l'interface manager
+3. `employee-interface.jpg` - Image de l'interface employé
+4. `manager-login.jpg` - Image pour la page de connexion manager
+5. `employee-login.jpg` - Image pour la page de connexion employé
+
+## Sources d'images recommandées
+
+Si vous n'avez pas d'images personnalisées, vous pouvez utiliser des images gratuites de :
+- Unsplash (https://unsplash.com)
+- Pexels (https://pexels.com)
+
+L'application utilisera automatiquement des images de remplacement si les images locales ne sont pas disponibles.
+
+## Images suggérées
+
+**Dashboard preview** : Images de tableaux de bord, d'analytiques, ou de personnes travaillant sur un ordinateur.
+
+**Interface manager** : Images montrant une personne qui supervise, gère une équipe, ou utilise un ordinateur dans un contexte professionnel.
+
+**Interface employé** : Images montrant des travailleurs de restaurant, des personnes consultant leur téléphone, ou un environnement de travail dynamique.
+
+**Login manager/employé** : Images de restaurant, d'équipes de travail, ou liées à la restauration rapide. 
