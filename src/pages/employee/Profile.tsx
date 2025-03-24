@@ -848,7 +848,7 @@ const EmployeeProfile = () => {
                       </span>
                     </div>
                     <div className="mt-2 text-sm text-muted-foreground">
-                      iPhone • BurgerStaffSync App • Paris, France
+                      iPhone • BIG M App • Paris, France
                             </div>
                     </div>
                   </div>

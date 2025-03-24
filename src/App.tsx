@@ -21,6 +21,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import DailyPlanning from "./pages/DailyPlanning";
 import MobileView from '@/components/MobileView';
+import PlanningViewer from "./pages/PlanningViewer";
 
 // Import des pages employé
 import EmployeeDashboard from "./pages/employee/Dashboard";
@@ -46,6 +47,11 @@ const AppContent = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  
+  // Pour le debug - assurons-nous que isMobile fonctionne correctement
+  React.useEffect(() => {
+    console.log('isMobile dans App.tsx:', isMobile);
+  }, [isMobile]);
   
   // État local pour l'authentification (à remplacer par un vrai système d'auth)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
@@ -175,8 +181,8 @@ const AppContent = () => {
           </>
         )}
         
-        <main className={`${isAppRoute(location.pathname) ? (isMobile ? "pt-4" : "pb-12 pt-16") : ""} ${shouldAddBottomPadding ? "pb-20" : ""}`}>
-          <div className={isAppRoute(location.pathname) ? (isMobile ? "px-4" : "max-w-7xl mx-auto") : ""}>
+        <main className={`${isAppRoute(location.pathname) ? (isMobile ? "pt-2" : "pb-12 pt-16") : ""} ${shouldAddBottomPadding ? "pb-16" : ""}`}>
+          <div className={isAppRoute(location.pathname) ? (isMobile ? "px-2" : "max-w-7xl mx-auto") : ""}>
             {isAppRoute(location.pathname) && !isMobile && (
               <>
                 {/* Afficher Breadcrumbs uniquement pour les routes manager */}
@@ -193,8 +199,8 @@ const AppContent = () => {
             
             {/* Afficher un en-tête adapté au mobile */}
             {isAppRoute(location.pathname) && isMobile && (
-              <div className="flex items-center justify-between mb-4">
-                <h1 className="text-xl font-bold">
+              <div className="flex items-center justify-between mb-3">
+                <h1 className="text-lg font-bold">
                   {!isEmployeeRoute(location.pathname) ? 'BurgerSync' : 'BurgerSync Employee'}
                 </h1>
               </div>
@@ -211,6 +217,7 @@ const AppContent = () => {
               <Route path="/employees" element={isLoggedIn ? <Employees /> : <Navigate to="/login" replace />} />
               <Route path="/planning" element={isLoggedIn ? <Planning /> : <Navigate to="/login" replace />} />
               <Route path="/daily-planning" element={isLoggedIn ? <DailyPlanning /> : <Navigate to="/login" replace />} />
+              <Route path="/planning-viewer" element={isLoggedIn ? <PlanningViewer /> : <Navigate to="/login" replace />} />
               <Route path="/absences" element={isLoggedIn ? <Absences /> : <Navigate to="/login" replace />} />
               <Route path="/notifications" element={isLoggedIn ? <Notifications /> : <Navigate to="/login" replace />} />
               <Route path="/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" replace />} />

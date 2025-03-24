@@ -161,7 +161,8 @@ const Login = () => {
             className="w-full max-w-md mx-auto"
           >
             <div className="text-center mb-6">
-              <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-primary`}>BurgerStaffSync</h1>
+              <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-primary`}>BIG M</h1>
+              <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-primary/70 mt-1`}>par DAMOUNE</p>
               <p className={`${isMobile ? 'text-sm' : ''} text-muted-foreground mt-2`}>Connexion à votre espace personnel</p>
             </div>
 

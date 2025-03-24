@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,48 +14,31 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserCog } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { UserCog, Camera, User, Mail, Phone } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Define the validation schema
 const employeeFormSchema = z.object({
   name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+    message: "Le nom doit contenir au moins 2 caractères.",
   }),
   email: z.string().email({
-    message: "Please enter a valid email address.",
+    message: "Veuillez entrer une adresse email valide.",
   }),
   phone: z.string()
-    .min(7, { message: "Phone number must be at least 7 characters." })
-    .max(20, { message: "Phone number is too long." })
+    .min(7, { message: "Le numéro de téléphone doit contenir au moins 7 caractères." })
+    .max(20, { message: "Le numéro de téléphone est trop long." })
     .refine(
       (value) => {
         // Accepte les formats: (123) 456-7890, 123-456-7890, 123.456.7890, ou 1234567890
         const phoneRegex = /^(\+\d{1,3}\s?)?(\(\d{3}\)\s?|\d{3}[-.\s]?)?\d{3}[-.\s]?\d{4}$/;
         return phoneRegex.test(value);
       },
-      { message: "Please enter a valid phone number format." }
+      { message: "Veuillez entrer un format de numéro de téléphone valide." }
     ),
-  availability: z.string().min(1, {
-    message: "Please specify availability.",
-  }),
+  // On définit une valeur par défaut pour availability pour éviter les erreurs de validation
+  availability: z.string().default("Full-Time"),
 });
-
-// Availability options
-const availabilityOptions = [
-  { value: "Full-Time", label: "Full-Time" },
-  { value: "Part-Time", label: "Part-Time" },
-  { value: "Weekends Only", label: "Weekends Only" },
-  { value: "Evenings Only", label: "Evenings Only" },
-  { value: "Mornings Only", label: "Mornings Only" },
-  { value: "On-Call", label: "On-Call" },
-];
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;
 
@@ -67,13 +49,16 @@ interface EmployeeFormProps {
 }
 
 export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeFormProps) {
+  const isMobile = useIsMobile();
+  const [formStep, setFormStep] = useState<'photo' | 'details'>('details');
+  
   const form = useForm<EmployeeFormValues>({
     resolver: zodResolver(employeeFormSchema),
     defaultValues: defaultValues || {
       name: '',
       email: '',
       phone: '',
-      availability: '',
+      availability: 'Full-Time', // Valeur par défaut
     },
   });
 
@@ -106,6 +91,10 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setAvatarUrl(imageUrl);
+      // Si nous sommes sur mobile, passons automatiquement aux détails
+      if (isMobile) {
+        setFormStep('details');
+      }
     }
   };
 
@@ -119,24 +108,45 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
-        {/* Avatar Upload Section - more compact */}
-        <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg border">
-          <Avatar className="h-16 w-16 border-2 border-primary/20">
-            <AvatarImage src={avatarUrl} alt="Avatar" />
-            <AvatarFallback className="text-lg bg-primary/10">
-              {form.watch('name') ? form.watch('name').charAt(0).toUpperCase() : <UserCog className="h-5 w-5 text-primary/60" />}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 space-y-1">
-            <Label htmlFor="avatar" className="text-sm font-medium block">
-              Employee Photo
-            </Label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Label htmlFor="avatar" className="cursor-pointer inline-flex w-full sm:w-auto">
-                <div className="flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
-                  Upload Image
-                </div>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+        {isMobile && (
+          <div className="flex justify-center mb-2">
+            {formStep === 'photo' ? (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setFormStep('details')}
+                className="text-xs"
+              >
+                Passer à l'étape suivante →
+              </Button>
+            ) : (
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setFormStep('photo')}
+                className="text-xs"
+              >
+                ← Modifier la photo
+              </Button>
+            )}
+          </div>
+        )}
+        
+        {/* Avatar Upload Section - redesigned for mobile */}
+        {(!isMobile || formStep === 'photo') && (
+          <div className="flex flex-col items-center gap-3 p-4 bg-muted/20 rounded-lg border">
+            <div className="relative">
+              <Avatar className={`${isMobile ? 'h-24 w-24' : 'h-16 w-16'} border-2 border-primary/20`}>
+                <AvatarImage src={avatarUrl} alt="Avatar" />
+                <AvatarFallback className="text-lg bg-primary/10">
+                  {form.watch('name') ? form.watch('name').charAt(0).toUpperCase() : <UserCog className="h-5 w-5 text-primary/60" />}
+                </AvatarFallback>
+              </Avatar>
+              <Label htmlFor="avatar" className="absolute -bottom-1 -right-1 cursor-pointer bg-primary text-primary-foreground rounded-full p-1.5 shadow-sm hover:bg-primary/90 transition-colors">
+                <Camera className="h-4 w-4" />
                 <Input 
                   id="avatar" 
                   type="file" 
@@ -145,107 +155,112 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
                   onChange={handleImageUpload}
                 />
               </Label>
+            </div>
+            <div className="text-center">
               <p className="text-xs text-muted-foreground">
-                JPEG, PNG (max 5MB)
+                Cliquez sur l'icône pour ajouter une photo
               </p>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {/* Name Field */}
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2">
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Email Field */}
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="john.doe@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Phone Field */}
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Number</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="(555) 123-4567" 
-                    value={field.value}
-                    onChange={handlePhoneChange}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    ref={field.ref}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Availability Field */}
-          <FormField
-            control={form.control}
-            name="availability"
-            render={({ field }) => (
-              <FormItem className="sm:col-span-2">
-                <FormLabel>Availability</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+        {/* Informations de l'employé */}
+        {(!isMobile || formStep === 'details') && (
+          <div className="space-y-4">
+            {/* Name Field */}
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    Nom complet
+                  </FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select availability" />
-                    </SelectTrigger>
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field}
+                      className={`${isMobile ? 'h-11' : ''}`}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    {availabilityOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Specify when this employee is available to work
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        {/* Form Actions - sticky at bottom */}
-        <div className="flex justify-end gap-3 pt-2 sticky bottom-0 bg-background pb-2">
-          <Button type="button" variant="outline" onClick={onCancel} size="sm">
-            Cancel
-          </Button>
-          <Button type="submit" size="sm">
-            Save Employee
-          </Button>
+            {/* Email Field */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                    Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="john.doe@example.com" 
+                      {...field}
+                      className={`${isMobile ? 'h-11' : ''}`}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Phone Field */}
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-sm flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                    Numéro de téléphone
+                  </FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="(555) 123-4567" 
+                      value={field.value}
+                      onChange={handlePhoneChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                      className={`${isMobile ? 'h-11' : ''}`}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {/* Form Actions - redesigned */}
+        <div className={`flex ${isMobile ? 'flex-col' : 'justify-end'} gap-3 pt-4 sticky bottom-0 bg-background pb-2`}>
+          {isMobile ? (
+            <>
+              <Button type="submit" size="lg" className="w-full h-12">
+                Enregistrer
+              </Button>
+              <Button type="button" variant="outline" onClick={onCancel} size="lg" className="w-full">
+                Annuler
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button type="button" variant="outline" onClick={onCancel} size="sm">
+                Annuler
+              </Button>
+              <Button type="submit" size="sm">
+                Enregistrer
+              </Button>
+            </>
+          )}
         </div>
       </form>
     </Form>

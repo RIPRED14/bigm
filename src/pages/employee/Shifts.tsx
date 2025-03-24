@@ -916,24 +916,194 @@ const EmployeeShifts: React.FC = () => {
             
             {/* Navigation entre les jours (pour le mode journalier) */}
             {viewMode === 'day' && (
-              <div className="flex items-center justify-between">
-                <Button variant="outline" size="sm" onClick={() => changeDay(-1)}>
-                  <ChevronLeft className="h-4 w-4 mr-1" /> Jour préc.
-                </Button>
-          <Button
-                  variant="outline" 
-            size="sm"
-                  onClick={() => setSelectedDate(new Date())}
-                  className={cn(
-                    isToday(selectedDate) ? "bg-primary/10 text-primary border-primary/20" : ""
+              <div className="space-y-3">
+                {/* Affichage du jour sélectionné avec navigation */}
+                <Card className="shadow-sm overflow-hidden bg-muted/5">
+                  <div className="flex flex-col">
+                    {/* Navigation entre jours */}
+                    <div className="p-3 flex items-center justify-between border-b">
+                      <Button variant="ghost" size="sm" onClick={() => changeDay(-1)}>
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="flex items-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedDate(new Date())}
+                          className={cn(
+                            "font-medium px-3",
+                            isToday(selectedDate) ? "text-primary" : ""
+                          )}
+                        >
+                          {isToday(selectedDate) ? "Aujourd'hui" : (
+                            isTomorrow(selectedDate) ? "Demain" : (
+                              format(selectedDate, 'EEEE d MMMM', { locale: fr })
+                            )
+                          )}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="size-7 ml-1"
+                        >
+                          <CalendarIcon className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      
+                      <Button variant="ghost" size="sm" onClick={() => changeDay(1)}>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    {/* Affichage des shifts du jour */}
+                    <ScrollArea className="h-[calc(100vh-380px)] min-h-[300px]">
+                      <div className="p-3 space-y-2">
+                        {dailyShifts.length > 0 ? (
+                          dailyShifts.map((shift) => (
+                            <div 
+                              key={shift.id}
+                              className={cn(
+                                "flex flex-col p-3 rounded-lg border cursor-pointer hover:bg-muted/10 transition-colors",
+                                shift.status === 'confirmé' ? "bg-green-50 border-green-200" : 
+                                shift.status === 'en attente' ? "bg-amber-50 border-amber-200" :
+                                "bg-orange-50 border-orange-200"
+                              )}
+                              onClick={() => openShiftDetails(shift.id)}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="flex items-center">
+                                  <div className="flex items-center p-1.5 mr-3 rounded-full bg-primary/10">
+                                    <Clock4 className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{shift.startTime} - {shift.endTime}</div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">
+                                      {shift.restaurant}
+                                    </div>
+                                  </div>
+                                </div>
+                                <ShiftStatusBadge status={shift.status} />
+                              </div>
+                              
+                              {shift.coworkers && shift.coworkers.length > 0 && (
+                                <div className="flex items-center ml-10 pl-3 mt-1">
+                                  <div className="flex -space-x-2 mr-2">
+                                    {shift.coworkers.slice(0, 3).map((coworker, i) => (
+                                      <div 
+                                        key={i}
+                                        className="size-7 rounded-full bg-muted flex items-center justify-center border border-background text-xs font-medium"
+                                      >
+                                        {coworker.charAt(0)}
+                                      </div>
+                                    ))}
+                                    {shift.coworkers.length > 3 && (
+                                      <div className="size-7 rounded-full bg-primary/10 flex items-center justify-center border border-background text-xs font-medium">
+                                        +{shift.coworkers.length - 3}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {shift.coworkers.length} collègue{shift.coworkers.length > 1 ? 's' : ''}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <div className="flex justify-between items-center mt-2 pt-2 border-t border-border/30">
+                                <div className="text-xs text-muted-foreground">
+                                  Durée: {formatHours(calculateHours(shift.startTime, shift.endTime))}
+                                </div>
+                                <Button variant="ghost" size="sm" className="h-7 px-2">
+                                  <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-48 text-center">
+                            <div className="bg-muted/20 p-3 rounded-full mb-3">
+                              <CalendarX className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-base font-medium">Pas de service ce jour</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Aucun service n'est prévu pour cette journée
+                            </p>
+                            {isEditing && (
+                              <Button 
+                                variant="outline"
+                                size="sm"
+                                className="mt-4"
+                                onClick={() => setCreateMode(true)}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Ajouter un service
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                    
+                    {/* Statistiques du jour */}
+                    {dailyShifts.length > 0 && (
+                      <div className="border-t">
+                        <div className="grid grid-cols-3 divide-x">
+                          <div className="p-3 text-center">
+                            <div className="text-xs text-muted-foreground">Services</div>
+                            <div className="font-bold text-base">{dailyShifts.length}</div>
+                          </div>
+                          <div className="p-3 text-center">
+                            <div className="text-xs text-muted-foreground">Heures</div>
+                            <div className="font-bold text-base">
+                              {formatHours(dailyShifts.reduce(
+                                (total, shift) => total + calculateHours(shift.startTime, shift.endTime),
+                                0
+                              ))}
+                            </div>
+                          </div>
+                          <div className="p-3 text-center">
+                            <div className="text-xs text-muted-foreground">Collègues</div>
+                            <div className="font-bold text-base">
+                              {new Set(dailyShifts.flatMap(s => s.coworkers || [])).size}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+                
+                {/* Actions rapides */}
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => navigate(-1)}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Retour
+                  </Button>
+                  
+                  {!isEditing ? (
+                    <Button 
+                      variant="default" 
+                      className="flex-1"
+                      onClick={() => setCreateMode(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Nouveau service
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="default"
+                      className="flex-1"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Terminer
+                    </Button>
                   )}
-          >
-            Aujourd'hui
-          </Button>
-                <Button variant="outline" size="sm" onClick={() => changeDay(1)}>
-                  Jour suiv. <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-        </div>
+                </div>
+              </div>
             )}
             
             {/* Navigation entre les semaines (pour le mode hebdomadaire) */}

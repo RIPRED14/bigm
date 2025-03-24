@@ -138,12 +138,12 @@ export const BottomTabBar: React.FC = () => {
   
   return (
     <motion.div 
-      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 shadow-lg"
+      className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 shadow-md"
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", damping: 20 }}
     >
-      <div className="grid grid-cols-4 h-16 max-w-md mx-auto">
+      <div className="grid grid-cols-4 h-14 max-w-md mx-auto">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path || 
                          (tab.path !== '/' && location.pathname.startsWith(tab.path));
@@ -153,7 +153,7 @@ export const BottomTabBar: React.FC = () => {
               key={tab.path}
               onClick={() => handleNavigation(tab.path)}
               className={cn(
-                "flex flex-col items-center justify-center relative py-2",
+                "flex flex-col items-center justify-center relative py-1.5",
                 "transition-all duration-200 ease-in-out",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
@@ -164,7 +164,7 @@ export const BottomTabBar: React.FC = () => {
                   {isActive ? (
                     <motion.div
                       key="active"
-                      className="absolute -inset-2 bg-primary/10 rounded-full"
+                      className="absolute -inset-1.5 bg-primary/10 rounded-full"
                       layoutId="tabHighlight"
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -174,11 +174,13 @@ export const BottomTabBar: React.FC = () => {
                   ) : null}
                 </AnimatePresence>
                 <div className="relative z-10">
-                  {isActive ? tab.activeIcon : tab.icon}
+                  {isActive ? 
+                    <div className="text-primary">{tab.activeIcon}</div> : 
+                    <div>{tab.icon}</div>}
                   {tab.notification && (
                     <Badge 
                       variant="destructive" 
-                      className="absolute -top-1.5 -right-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                      className="absolute -top-1.5 -right-1.5 h-3.5 w-3.5 p-0 flex items-center justify-center text-[9px] font-bold"
                     >
                       {tab.notification}
                     </Badge>
@@ -186,14 +188,14 @@ export const BottomTabBar: React.FC = () => {
                 </div>
               </div>
               <span className={cn(
-                "text-xs mt-1 font-medium transition-all",
+                "text-[10px] mt-0.5 font-medium transition-all",
                 isActive ? "opacity-100 font-semibold" : "opacity-80"
               )}>
                 {tab.label}
               </span>
               {isActive && (
                 <motion.div 
-                  className="absolute bottom-0.5 h-1 w-10 bg-primary rounded-full" 
+                  className="absolute bottom-0 h-0.5 w-8 bg-primary rounded-full" 
                   layoutId="activeIndicator"
                   transition={{ type: "spring", damping: 15 }}
                 />

@@ -110,7 +110,7 @@ const Home = () => {
             transition={{ duration: 0.5 }}
           >
             <h1 className={`${isMobile ? 'text-3xl font-extrabold tracking-tight' : 'text-4xl md:text-6xl font-bold'} bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 mb-3`}>
-              BurgerStaffSync
+              BIG M
             </h1>
             <p className={`${isMobile ? 'text-base px-1' : 'text-xl md:text-2xl'} text-muted-foreground max-w-2xl mx-auto mb-6`}>
               Planification des équipes et gestion du personnel pour les restaurants, simple et efficace.
@@ -377,7 +377,7 @@ const Home = () => {
         >
           <h2 className={`${isMobile ? 'text-xl font-bold' : 'text-3xl md:text-4xl font-bold'} mb-3`}>Prêt à optimiser la gestion de votre équipe ?</h2>
           <p className={`${isMobile ? 'text-sm' : 'text-xl'} opacity-90 max-w-2xl mx-auto mb-6`}>
-            Commencez dès aujourd'hui et découvrez comment BurgerStaffSync peut simplifier votre quotidien.
+            Commencez dès aujourd'hui et découvrez comment BIG M peut simplifier votre quotidien.
           </p>
           <Button 
             size={isMobile ? "lg" : "default"} 
@@ -397,7 +397,7 @@ const Home = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className={`grid ${isMobile ? 'grid-cols-1 gap-6' : 'grid-cols-2 md:grid-cols-4 gap-8'}`}>
             <div className={`${isMobile ? '' : 'col-span-2 md:col-span-2'}`}>
-              <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-3`}>BurgerStaffSync</h3>
+              <h3 className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold mb-3`}>BIG M</h3>
               <p className={`${isMobile ? 'text-xs' : ''} text-slate-300 mb-4 max-w-md`}>
                 Solution complète pour la gestion du personnel de restaurant.
               </p>
@@ -420,7 +420,8 @@ const Home = () => {
             </div>
           </div>
           <div className="border-t border-slate-800 mt-6 sm:mt-12 pt-6 text-center text-slate-400">
-            <p className={isMobile ? 'text-xs' : ''}>© {new Date().getFullYear()} BurgerStaffSync. Tous droits réservés.</p>
+            <p className={isMobile ? 'text-xs' : ''}>© {new Date().getFullYear()} BIG M. Tous droits réservés.</p>
+            <p className={`${isMobile ? 'text-xs' : ''} mt-1`}>Créé par DAMOUNE</p>
           </div>
         </div>
       </footer>

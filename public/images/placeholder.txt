@@ -1,4 +1,4 @@
-# Images pour BurgerStaffSync
+# Images pour BIG M
 
 Pour compléter l'application avec des images professionnelles, veuillez télécharger des images dans ce dossier avec les noms suivants :
 
