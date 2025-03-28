@@ -13,7 +13,8 @@ import {
   ArrowLeftRight,
   User,
   Calendar,
-  MessageSquare
+  MessageSquare,
+  Utensils
 } from 'lucide-react';
 import { AuthContext } from '@/App';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -75,6 +76,12 @@ const employeeTabs: TabItem[] = [
     label: 'Échanges',
     path: '/employee/exchanges',
     notification: 2  // Exemple de notification
+  },
+  {
+    icon: <Utensils className="h-5 w-5" />,
+    activeIcon: <Utensils className="h-5 w-5 text-primary" />,
+    label: 'Recettes',
+    path: '/employee/recipes'
   },
   {
     icon: <User className="h-5 w-5" />,
@@ -143,7 +150,7 @@ export const BottomTabBar: React.FC = () => {
       animate={{ y: 0 }}
       transition={{ type: "spring", damping: 20 }}
     >
-      <div className="grid grid-cols-4 h-14 max-w-md mx-auto">
+      <div className={`grid ${isAdminInterface ? 'grid-cols-4' : 'grid-cols-5'} h-14 max-w-md mx-auto`}>
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path || 
                          (tab.path !== '/' && location.pathname.startsWith(tab.path));

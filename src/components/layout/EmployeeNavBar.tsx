@@ -39,6 +39,7 @@ import {
   MessageSquare,
   Server,
   ExternalLink,
+  Utensils,
 } from 'lucide-react';
 import { AuthContext } from "@/App";
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -72,6 +73,11 @@ const navItems: NavItem[] = [
     badge: 2, // Example badge for demonstration
   },
   {
+    title: 'Recettes',
+    href: '/employee/recipes',
+    icon: <Utensils className="w-5 h-5" />,
+  },
+  {
     title: 'Mon profil',
     href: '/employee/profile',
     icon: <User className="w-5 h-5" />,
@@ -80,7 +86,7 @@ const navItems: NavItem[] = [
 
 // Données mockées pour l'utilisateur connecté
 const currentUser = {
-  name: 'John Doe',
+  name: 'Reda',
   avatarUrl: '',
   role: 'Employé', // Pour différencier d'un manager
 };
@@ -377,6 +383,7 @@ const EmployeeNavBar = () => {
     if (path.startsWith('/employee/exchanges')) return 'Échanges';
     if (path.startsWith('/employee/profile')) return 'Profil';
     if (path.startsWith('/employee/absences')) return 'Absences';
+    if (path.startsWith('/employee/recipes')) return 'Recettes';
     
     return 'BurgerStaff';
   };

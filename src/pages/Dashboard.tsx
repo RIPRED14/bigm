@@ -55,41 +55,41 @@ const Dashboard = () => {
   const todayShifts = [
     { 
       id: 1, 
-      employee: 'John Doe',
+      employee: 'Reda',
       startTime: '08:00', 
       endTime: '16:00', 
       status: currentTime > '08:00' && currentTime < '16:00' ? 'active' : currentTime > '16:00' ? 'completed' : 'upcoming',
-      phone: '06 12 34 56 78',
+      phone: '(+212) 601-234567',
       notes: 'Responsable ouverture',
       avatarUrl: ''
     },
     { 
       id: 2, 
-      employee: 'Jane Smith',
+      employee: 'Sami',
       startTime: '10:00', 
       endTime: '18:00', 
       status: currentTime > '10:00' && currentTime < '18:00' ? 'active' : currentTime > '18:00' ? 'completed' : 'upcoming',
-      phone: '06 98 76 54 32',
+      phone: '(+212) 602-345678',
       notes: 'Formation nouveau système',
       avatarUrl: ''
     },
     { 
       id: 3, 
-      employee: 'Mike Johnson',
+      employee: 'Afif',
       startTime: '12:00', 
       endTime: '20:00', 
       status: currentTime > '12:00' && currentTime < '20:00' ? 'active' : currentTime > '20:00' ? 'completed' : 'upcoming',
-      phone: '07 11 22 33 44',
+      phone: '(+212) 603-456789',
       notes: '',
       avatarUrl: ''
     },
     { 
       id: 4, 
-      employee: 'Sarah Williams',
+      employee: 'Reda',
       startTime: '16:00', 
       endTime: '00:00', 
       status: currentTime > '16:00' && currentTime < '23:59' ? 'active' : 'upcoming',
-      phone: '06 55 66 77 88',
+      phone: '(+212) 601-234567',
       notes: 'Responsable fermeture',
       avatarUrl: ''
     },
@@ -97,47 +97,6 @@ const Dashboard = () => {
 
   // Trouver les employés actuellement en service
   const activeEmployees = todayShifts.filter(shift => shift.status === 'active');
-
-  // Adapter les alertes pour qu'elles soient cohérentes avec la plateforme
-  const todayAlerts = [
-    { 
-      id: 1,
-      type: 'absence', 
-      employee: 'Alex Rodriguez', 
-      reason: 'Maladie', 
-      severity: 'high',
-      time: '08:30',
-      isRead: false,
-      actions: [
-        { label: 'Contacter', icon: Phone, action: 'tel:0612345678' },
-        { label: 'Remplacer', icon: UserCircle, action: '/daily-planning?action=replace&id=5' }
-      ]
-    },
-    { 
-      id: 2,
-      type: 'schedule', 
-      employee: 'Mike Johnson', 
-      message: 'En retard de 15 minutes', 
-      severity: 'medium',
-      time: '11:45',
-      isRead: true,
-      actions: [
-        { label: 'Contacter', icon: Phone, action: 'tel:0698765432' },
-        { label: 'Ajuster', icon: Edit, action: '/daily-planning?action=edit&id=3' }
-      ]
-    },
-    { 
-      id: 3,
-      type: 'info', 
-      message: 'Livraison de fournitures à 15:00', 
-      severity: 'low',
-      time: '09:15',
-      isRead: false,
-      actions: [
-        { label: 'Noter', icon: Check, action: 'markAsRead' }
-      ]
-    },
-  ];
 
   // Données pour les stats rapides
   const quickStats = [
@@ -158,13 +117,35 @@ const Dashboard = () => {
       value: activeEmployees.length.toString(), 
       icon: CheckCircle2,
       color: 'green'
+    }
+  ];
+
+  // Données pour les stats rapides mobile uniquement
+  const mobileQuickStats = [
+    { 
+      title: 'Personnel', 
+      value: todayShifts.length.toString(), 
+      icon: Users,
+      color: 'primary'
     },
     { 
-      title: 'Absents', 
-      value: todayAlerts.filter(a => a.type === 'absence').length.toString(), 
-      icon: CalendarX,
-      color: 'amber'
+      title: 'Heures', 
+      value: '72', 
+      icon: Clock,
+      color: 'primary'
     },
+    { 
+      title: 'En Service', 
+      value: activeEmployees.length.toString(), 
+      icon: CheckCircle2,
+      color: 'green'
+    },
+    { 
+      title: 'Prochain', 
+      value: todayShifts.find(s => s.status === 'upcoming')?.startTime || '--:--', 
+      icon: Calendar,
+      color: 'blue'
+    }
   ];
 
   // Données pour la semaine (pour l'onglet "Semaine")
@@ -201,20 +182,6 @@ const Dashboard = () => {
         return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">À venir</Badge>;
       default:
         return <Badge variant="outline" className="bg-slate-100 text-slate-800 border-slate-200">{status}</Badge>;
-    }
-  };
-
-  // Fonction pour afficher la sévérité d'une alerte
-  const getAlertSeverityBadge = (severity: string) => {
-    switch(severity) {
-      case 'high':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">Urgent</Badge>;
-      case 'medium':
-        return <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200">Important</Badge>;
-      case 'low':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">Information</Badge>;
-      default:
-        return <Badge variant="outline" className="bg-slate-100 text-slate-800 border-slate-200">{severity}</Badge>;
     }
   };
 
@@ -290,16 +257,16 @@ const Dashboard = () => {
           {/* Actions rapides - optimisées pour mobile */}
           {isMobile ? (
             <div className="flex items-center gap-1.5 mb-3">
-              <Button variant="outline" size="sm" onClick={() => navigate('/planning-viewer')} className="h-7 text-xs flex-1">
-                <Eye className="h-3 w-3 mr-1" />
-                Voir
+              <Button variant="outline" size="sm" onClick={() => navigate('/planning-viewer')} className="h-8 text-xs flex-1 border-blue-200 bg-blue-50 text-blue-800">
+                <Eye className="h-3.5 w-3.5 mr-1" />
+                Voir planning
               </Button>
-              <Button variant="outline" size="sm" onClick={() => navigate('/daily-planning')} className="h-7 text-xs flex-1">
-                <Edit className="h-3 w-3 mr-1" />
+              <Button variant="outline" size="sm" onClick={() => navigate('/daily-planning')} className="h-8 text-xs flex-1 border-green-200 bg-green-50 text-green-800">
+                <Edit className="h-3.5 w-3.5 mr-1" />
                 Modifier
               </Button>
-              <Button size="sm" onClick={() => navigate('/daily-planning?action=add')} className="h-7 text-xs flex-1">
-                <PlusCircle className="h-3 w-3 mr-1" />
+              <Button size="sm" onClick={() => navigate('/daily-planning?action=add')} className="h-8 text-xs flex-1 bg-primary hover:bg-primary/90">
+                <PlusCircle className="h-3.5 w-3.5 mr-1" />
                 Ajouter
               </Button>
             </div>
@@ -322,24 +289,30 @@ const Dashboard = () => {
           
           {/* Statistiques rapides */}
           {isMobile ? (
-            <div className="grid grid-cols-2 gap-1.5 mb-3">
-              {quickStats.map((stat, index) => (
+            <div className="grid grid-cols-4 gap-1.5 mb-3">
+              {mobileQuickStats.map((stat, index) => (
                 <div 
                   key={index} 
-                  className="flex items-center gap-2 p-2 border rounded-lg bg-gradient-to-b from-muted/50 to-transparent"
+                  className={`flex flex-col items-center justify-center p-2 border rounded-lg ${
+                    stat.color === 'green' ? 'bg-green-50 border-green-200' :
+                    stat.color === 'blue' ? 'bg-blue-50 border-blue-200' :
+                    'bg-primary/5 border-primary/20'
+                  }`}
                 >
-                  <div className={`p-1.5 rounded-md bg-primary/10`}>
-                    <stat.icon className="h-3.5 w-3.5 text-primary" />
+                  <div className="mb-1">
+                    <stat.icon className={`h-4 w-4 ${
+                      stat.color === 'green' ? 'text-green-600' :
+                      stat.color === 'blue' ? 'text-blue-600' :
+                      'text-primary'
+                    }`} />
                   </div>
-                  <div>
-                    <div className="text-lg font-bold leading-none">{stat.value}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{stat.title}</div>
-                  </div>
+                  <div className="text-base font-bold leading-none">{stat.value}</div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5 text-center">{stat.title}</div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
               {quickStats.map((stat, index) => (
                 <StatsCard
                   key={index}
@@ -355,6 +328,111 @@ const Dashboard = () => {
 
           {/* Contenu principal par onglet */}
           <TabsContent value="today" className="mt-0 pt-0 space-y-4">
+            {/* Tous les shifts du jour - optimisé pour mobile et mis en premier */}
+            {isMobile && (
+              <Card className="shadow-sm border-primary/30">
+                <CardHeader className={`pb-2 ${isMobile ? "py-2 bg-primary/5" : ""}`}>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'} flex items-center gap-1`}>
+                      <Calendar className="h-4 w-4 text-primary" />
+                      Planning Aujourd'hui
+                    </CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => navigate('/daily-planning')} className="h-7 text-xs bg-primary/10 border-primary/20 text-primary">
+                      <Edit className="h-3 w-3 mr-1" />
+                      Gérer
+                    </Button>
+                  </div>
+                  <CardDescription className="text-xs">
+                    {todayShifts.length} shifts programmés • {format(now, "EEEE d MMMM", { locale: fr })}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2 px-2">
+                  <div className="space-y-3">
+                    {todayShifts.map((shift) => (
+                      <div 
+                        key={shift.id} 
+                        className={`p-2.5 rounded-lg border ${
+                          shift.status === 'active' ? 'border-green-200 bg-green-50/50' : 
+                          shift.status === 'completed' ? 'border-slate-200 bg-slate-50/50 opacity-70' : 
+                          'border-blue-200 bg-blue-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-7 w-7">
+                              <AvatarFallback className={`${
+                                shift.status === 'active' ? 'bg-green-100 text-green-800' : 
+                                shift.status === 'completed' ? 'bg-slate-100 text-slate-800' : 
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {shift.employee.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm">{shift.employee}</p>
+                              {shift.notes && (
+                                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
+                                  {shift.notes}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="scale-90 -mr-1 origin-right">
+                            {getShiftStatusBadge(shift.status)}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-xs font-medium">{shift.startTime} - {shift.endTime}</span>
+                            {shift.status === 'active' && (
+                              <span className="text-muted-foreground text-xs">
+                                {calculateShiftProgress(shift.startTime, shift.endTime)}%
+                              </span>
+                            )}
+                          </div>
+                          
+                          {shift.status === 'active' && (
+                            <Progress value={calculateShiftProgress(shift.startTime, shift.endTime)} className="h-1.5" />
+                          )}
+                          
+                          <div className="flex justify-end gap-1 pt-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-1.5"
+                              onClick={() => window.open(`tel:${shift.phone}`)}
+                            >
+                              <Phone className="h-3 w-3 mr-1" />
+                              <span className="sr-only">Appeler</span>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-1.5"
+                              onClick={() => navigate(`/employees?id=${shift.id}`)}
+                            >
+                              <UserCircle className="h-3 w-3 mr-1" />
+                              <span className="sr-only">Profil</span>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 px-1.5 text-primary"
+                              onClick={() => navigate(`/daily-planning?action=edit&id=${shift.id}`)}
+                            >
+                              <Edit2 className="h-3 w-3 mr-1" />
+                              <span className="sr-only">Modifier</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Carte des employés en service maintenant - optimisée pour mobile */}
             <Card className="shadow-sm border-green-200">
               <CardHeader className={`pb-2 bg-green-50 ${isMobile ? "py-2" : ""}`}>
@@ -409,197 +487,144 @@ const Dashboard = () => {
               </CardContent>
             </Card>
             
-            {/* Tous les shifts du jour - optimisé pour mobile */}
-            <Card>
-              <CardHeader className={`pb-2 ${isMobile ? "py-2" : ""}`}>
-                <div className="flex items-center justify-between">
-                  <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'}`}>
-                    {isMobile ? "Planning" : "Planning du jour"}
-                  </CardTitle>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/daily-planning')} className={isMobile ? "h-7 text-xs" : ""}>
-                    <Calendar className={`${isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-1.5"}`} />
-                    {isMobile ? "Détail" : "Détails"}
-                  </Button>
-                </div>
-                <CardDescription className={isMobile ? "text-xs" : ""}>
-                  {todayShifts.length} shifts programmés
-                </CardDescription>
-              </CardHeader>
-              <CardContent className={`pt-2 ${isMobile ? "px-2" : ""}`}>
-                <div className="space-y-3">
-                  {todayShifts.map((shift) => (
-                    <div 
-                      key={shift.id} 
-                      className={`${isMobile ? "p-2" : "p-3"} rounded-lg border ${
-                        shift.status === 'active' ? 'border-green-200 bg-green-50/50' : 
-                        shift.status === 'completed' ? 'border-slate-200 bg-slate-50/50 opacity-70' : 
-                        'border-blue-200 bg-blue-50/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Avatar className={`${isMobile ? "h-7 w-7" : "h-8 w-8"}`}>
-                            <AvatarFallback>
-                              {shift.employee.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
+            {/* Tous les shifts du jour - optimisé pour mobile
+               - Supprimé pour mobile car déjà affiché en haut de page, gardé pour desktop */}
+            {!isMobile && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">
+                      Planning du jour
+                    </CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => navigate('/daily-planning')}>
+                      <Calendar className="h-4 w-4 mr-1.5" />
+                      Détails
+                    </Button>
+                  </div>
+                  <CardDescription>
+                    {todayShifts.length} shifts programmés
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  <div className="space-y-3">
+                    {todayShifts.map((shift) => (
+                      <div 
+                        key={shift.id} 
+                        className="p-3 rounded-lg border"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback>
+                                {shift.employee.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{shift.employee}</p>
+                              {shift.notes && (
+                                <span className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                                  {shift.notes}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                           <div>
-                            <p className={`font-medium ${isMobile ? "text-sm" : ""}`}>{shift.employee}</p>
-                            {shift.notes && (
-                              <span className={`${isMobile ? "text-[10px]" : "text-xs"} bg-muted px-1.5 py-0.5 rounded`}>
-                                {shift.notes}
+                            {getShiftStatusBadge(shift.status)}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>{shift.startTime} - {shift.endTime}</span>
+                            {shift.status === 'active' && (
+                              <span className="text-muted-foreground">
+                                {calculateShiftProgress(shift.startTime, shift.endTime)}%
                               </span>
                             )}
                           </div>
-                        </div>
-                        <div className={isMobile ? "scale-90 -mr-1 origin-right" : ""}>
-                          {getShiftStatusBadge(shift.status)}
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className={isMobile ? "text-xs" : ""}>{shift.startTime} - {shift.endTime}</span>
+                          
                           {shift.status === 'active' && (
-                            <span className={`text-muted-foreground ${isMobile ? "text-xs" : ""}`}>
-                              {calculateShiftProgress(shift.startTime, shift.endTime)}%
-                            </span>
+                            <Progress value={calculateShiftProgress(shift.startTime, shift.endTime)} className="h-1.5" />
                           )}
-                        </div>
-                        
-                        {shift.status === 'active' && (
-                          <Progress value={calculateShiftProgress(shift.startTime, shift.endTime)} className="h-1.5" />
-                        )}
-                        
-                        <div className="flex justify-end gap-1 pt-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className={`${isMobile ? "h-6 px-1.5" : "h-7"}`} 
-                            onClick={() => window.open(`tel:${shift.phone}`)}
-                          >
-                            <Phone className={`${isMobile ? "h-3 w-3" : "h-3.5 w-3.5"} ${isMobile ? "mr-1" : "mr-1.5"}`} />
-                            <span className={isMobile ? "sr-only" : ""}>Appeler</span>
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className={`${isMobile ? "h-6 px-1.5" : "h-7"}`}
-                            onClick={() => navigate(`/employees?id=${shift.id}`)}
-                          >
-                            <UserCircle className={`${isMobile ? "h-3 w-3" : "h-3.5 w-3.5"} ${isMobile ? "mr-1" : "mr-1.5"}`} />
-                            <span className={isMobile ? "sr-only" : ""}>Profil</span>
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className={`${isMobile ? "h-6 px-1.5" : "h-7"}`}
-                            onClick={() => navigate(`/daily-planning?action=edit&id=${shift.id}`)}
-                          >
-                            <Edit2 className={`${isMobile ? "h-3 w-3" : "h-3.5 w-3.5"} ${isMobile ? "mr-1" : "mr-1.5"}`} />
-                            <span className={isMobile ? "sr-only" : ""}>Modifier</span>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            {/* Vue adaptative pour les sections alertes et partage */}
-            <div className={`grid ${isMobile ? "grid-cols-1 gap-3" : "grid-cols-1 md:grid-cols-2 gap-4"}`}>
-              {/* Alertes du jour - avec actions - optimisées pour mobile */}
-              <Card>
-                <CardHeader className={`pb-2 ${isMobile ? "py-2" : ""}`}>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'}`}>
-                      {isMobile ? "Alertes" : "Alertes du jour"}
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={`bg-amber-100 text-amber-800 border-amber-200 ${isMobile ? "text-xs" : ""}`}>
-                        {todayAlerts.filter(a => !a.isRead).length} non lues
-                      </Badge>
-                      <Button variant="ghost" size="sm" className={`${isMobile ? "h-6 w-6 p-0" : "h-7 px-2"}`}>
-                        <Check className={`${isMobile ? "h-3 w-3" : "h-3.5 w-3.5"}`} />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className={isMobile ? "px-2 py-2" : ""}>
-                  <div className="space-y-3">
-                    {todayAlerts.map((alert) => (
-                      <div 
-                        key={alert.id} 
-                        className={`${isMobile ? "p-2" : "p-3"} rounded-lg border ${
-                          alert.isRead ? 'border-muted bg-muted/20' : 'border-muted'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {alert.type === 'absence' ? (
-                              <CalendarX className={`${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} text-red-600`} />
-                            ) : alert.type === 'schedule' ? (
-                              <Clock className={`${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} text-amber-600`} />
-                            ) : (
-                              <AlertTriangle className={`${isMobile ? "h-3.5 w-3.5" : "h-4 w-4"} text-blue-600`} />
-                            )}
-                            <span className={`font-medium ${isMobile ? "text-sm" : ""}`}>
-                              {alert.type === 'absence' ? 'Absence' : 
-                                alert.type === 'schedule' ? 'Retard' : 
-                                'Information'}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className={`${isMobile ? "text-[10px]" : "text-xs"} text-muted-foreground`}>
-                              {alert.time}
-                            </span>
-                            <div className={isMobile ? "scale-90 origin-right" : ""}>
-                              {getAlertSeverityBadge(alert.severity)}
-                            </div>
-                          </div>
-                        </div>
-                        <div className={`${isMobile ? "mt-1.5 mb-1.5 text-xs" : "mt-2 mb-2 text-sm"}`}>
-                          {alert.type === 'absence' && (
-                            <span>{alert.employee} - {alert.reason}</span>
-                          )}
-                          {alert.type === 'schedule' && (
-                            <span>{alert.employee} - {alert.message}</span>
-                          )}
-                          {alert.type === 'info' && (
-                            <span>{alert.message}</span>
-                          )}
-                        </div>
-                        <div className="flex justify-end gap-1 pt-1">
-                          {alert.actions.map((action, i) => (
+                          
+                          <div className="flex justify-end gap-1 pt-1">
                             <Button 
-                              key={i}
                               variant="ghost" 
                               size="sm" 
-                              className={`${isMobile ? "h-6 text-[10px] px-1.5" : "h-7 text-xs"}`}
-                              onClick={() => {
-                                if (action.action.startsWith('tel:')) {
-                                  window.open(action.action);
-                                } else if (action.action === 'markAsRead') {
-                                  // Logic to mark as read would go here
-                                  console.log(`Alerte ${alert.id} marquée comme lue`);
-                                } else {
-                                  navigate(action.action);
-                                }
-                              }}
+                              className="h-7" 
+                              onClick={() => window.open(`tel:${shift.phone}`)}
                             >
-                              <action.icon className={`${isMobile ? "h-3 w-3 mr-0.5" : "h-3.5 w-3.5 mr-1"}`} />
-                              {action.label}
+                              <Phone className="h-3.5 w-3.5 mr-1.5" />
+                              <span>Appeler</span>
                             </Button>
-                          ))}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7"
+                              onClick={() => navigate(`/employees?id=${shift.id}`)}
+                            >
+                              <UserCircle className="h-3.5 w-3.5 mr-1.5" />
+                              <span>Profil</span>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7"
+                              onClick={() => navigate(`/daily-planning?action=edit&id=${shift.id}`)}
+                            >
+                              <Edit2 className="h-3.5 w-3.5 mr-1.5" />
+                              <span>Modifier</span>
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
+            )}
+            
+            {/* Vue adaptative pour les sections alertes et partage */}
+            <div className={`grid ${isMobile ? "grid-cols-1 gap-3" : "grid-cols-1 md:grid-cols-1 gap-4"}`}>
+              {/* Version mobile du partage de planning */}
+              {isMobile && (
+                <Card className="shadow-sm border-blue-200 bg-blue-50/30">
+                  <CardHeader className="pb-2 pt-3">
+                    <CardTitle className="text-sm flex items-center">
+                      <Share2 className="h-4 w-4 mr-1.5 text-blue-600" />
+                      Partage du Planning
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 pb-3">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Publiez le planning hebdomadaire pour vos employés
+                    </p>
+                    
+                    <div className="flex gap-1 overflow-x-auto pb-1 mb-2 -mx-1 px-1">
+                      {weekShifts.map((day, index) => {
+                        const isComplete = day.totalEmployees >= 5;
+                        return (
+                          <div key={index} className="text-center flex-shrink-0 w-12">
+                            <div className="text-xs">{day.day.slice(0, 3)}</div>
+                            <div className={`h-2 w-full rounded-full mt-1 ${isComplete ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button 
+                      className="w-full text-xs h-8" 
+                      variant="default"
+                      onClick={() => navigate('/daily-planning')}
+                    >
+                      <Share2 className="h-3.5 w-3.5 mr-1.5" />
+                      Accéder au partage
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
               
-              {/* Version simplifiée du partage de planning pour mobile */}
+              {/* Version desktop du partage de planning */}
               {!isMobile && (
                 <Card>
                   <CardHeader className="pb-2">
@@ -636,10 +661,19 @@ const Dashboard = () => {
                           })}
                         </div>
                         
-                        <Button className="w-full" variant="default">
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Partager le planning
-                        </Button>
+                        <div className="space-y-2">
+                          <Button 
+                            className="w-full" 
+                            variant="default"
+                            onClick={() => navigate('/daily-planning')}
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            Partager le planning
+                          </Button>
+                          <p className="text-xs text-muted-foreground text-center">
+                            Utilisez la fonction complète dans <Link to="/daily-planning" className="text-blue-600 hover:underline">Planning Quotidien</Link> pour plus d'options
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -650,14 +684,14 @@ const Dashboard = () => {
           
           <TabsContent value="week" className="mt-0 pt-0">
             <Card>
-              <CardHeader className={`pb-2 ${isMobile ? "py-2" : ""}`}>
+              <CardHeader className={`pb-2 ${isMobile ? "py-2 bg-primary/5" : ""}`}>
                 <div className="flex items-center justify-between">
                   <CardTitle className={`${isMobile ? 'text-sm' : 'text-lg'}`}>
-                    {isMobile ? "Semaine" : "Planning hebdomadaire"}
+                    {isMobile ? "Planning Semaine" : "Planning hebdomadaire"}
                   </CardTitle>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/planning')} className={isMobile ? "h-7 text-xs" : ""}>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/planning')} className={`${isMobile ? "h-7 text-xs bg-primary/10 border-primary/20 text-primary" : ""}`}>
                     <CalendarRange className={`${isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-1.5"}`} />
-                    {isMobile ? "Planning" : "Planning complet"}
+                    {isMobile ? "Gérer" : "Planning complet"}
                   </Button>
                 </div>
                 <CardDescription className={isMobile ? "text-xs" : ""}>
@@ -770,61 +804,66 @@ const Dashboard = () => {
 
       {/* Actions rapides flottantes pour mobile - optimisées */}
       {isMobile && (
-        <div className="fixed bottom-20 right-4 flex flex-col gap-2">
+        <div className="fixed bottom-20 right-4 flex flex-col gap-2 z-10">
           <Button 
             size="icon" 
-            className="h-10 w-10 rounded-full shadow-lg bg-primary hover:bg-primary/90"
+            className="h-14 w-14 rounded-full shadow-xl bg-primary hover:bg-primary/90"
             onClick={() => navigate('/daily-planning?action=add')}
           >
-            <PlusCircle className="h-4 w-4" />
+            <PlusCircle className="h-6 w-6" />
           </Button>
         </div>
       )}
 
-      {/* Actions rapides en grille simplifiée pour mobile */}
-      <div className={`${isMobile ? "mt-3" : "mt-4"}`}>
-        <Card className={isMobile ? "border-muted/50" : ""}>
-          <CardHeader className={`${isMobile ? "py-2" : "py-3"}`}>
-            <CardTitle className={`${isMobile ? "text-xs" : "text-sm"}`}>Actions rapides</CardTitle>
-          </CardHeader>
-          <CardContent className={`${isMobile ? "py-2 px-2" : "py-3"}`}>
-            <div className="grid grid-cols-4 gap-2">
-              <Button 
-                variant="outline" 
-                className={`h-auto ${isMobile ? "py-2 px-0" : "py-3"} flex flex-col gap-1 justify-center`} 
-                onClick={() => navigate('/daily-planning')}
-              >
-                <Calendar className={`${isMobile ? "h-4 w-4 mb-0.5" : "h-5 w-5 mb-1"}`} />
-                <span className={isMobile ? "text-[10px]" : ""}>Planning</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className={`h-auto ${isMobile ? "py-2 px-0" : "py-3"} flex flex-col gap-1 justify-center`} 
-                onClick={() => navigate('/employees')}
-              >
-                <Users className={`${isMobile ? "h-4 w-4 mb-0.5" : "h-5 w-5 mb-1"}`} />
-                <span className={isMobile ? "text-[10px]" : ""}>Employés</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className={`h-auto ${isMobile ? "py-2 px-0" : "py-3"} flex flex-col gap-1 justify-center`} 
-                onClick={() => navigate('/planning-viewer')}
-              >
-                <Eye className={`${isMobile ? "h-4 w-4 mb-0.5" : "h-5 w-5 mb-1"}`} />
-                <span className={isMobile ? "text-[10px]" : ""}>Voir</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className={`h-auto ${isMobile ? "py-2 px-0" : "py-3"} flex flex-col gap-1 justify-center`} 
-                onClick={() => navigate('/settings')}
-              >
-                <Settings className={`${isMobile ? "h-4 w-4 mb-0.5" : "h-5 w-5 mb-1"}`} />
-                <span className={isMobile ? "text-[10px]" : ""}>Réglages</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Actions rapides en grille simplifiée pour mobile - priorité au planning */}
+      {isMobile && (
+        <div className="mt-4 mb-14">
+          <Card className="border-primary/20 shadow-sm">
+            <CardHeader className="py-2 bg-primary/5">
+              <CardTitle className="text-xs flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5 text-primary" />
+                Accès Rapides Planning
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-3 px-3">
+              <div className="grid grid-cols-4 gap-2">
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-3 px-0 flex flex-col gap-1 justify-center bg-primary/5 border-primary/20 text-primary" 
+                  onClick={() => navigate('/daily-planning')}
+                >
+                  <Calendar className="h-5 w-5 mb-0.5" />
+                  <span className="text-[10px]">Aujourd'hui</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-3 px-0 flex flex-col gap-1 justify-center bg-primary/5 border-primary/20 text-primary" 
+                  onClick={() => navigate('/planning')}
+                >
+                  <CalendarRange className="h-5 w-5 mb-0.5" />
+                  <span className="text-[10px]">Semaine</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-3 px-0 flex flex-col gap-1 justify-center" 
+                  onClick={() => navigate('/employees')}
+                >
+                  <Users className="h-5 w-5 mb-0.5" />
+                  <span className="text-[10px]">Employés</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-auto py-3 px-0 flex flex-col gap-1 justify-center" 
+                  onClick={() => navigate('/settings')}
+                >
+                  <Settings className="h-5 w-5 mb-0.5" />
+                  <span className="text-[10px]">Réglages</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </PageContainer>
   );
 };

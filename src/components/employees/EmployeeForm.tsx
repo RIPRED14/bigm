@@ -179,7 +179,7 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
                   </FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="John Doe" 
+                      placeholder="Reda" 
                       {...field}
                       className={`${isMobile ? 'h-11' : ''}`}
                     />
@@ -202,7 +202,7 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
                   <FormControl>
                     <Input 
                       type="email" 
-                      placeholder="john.doe@example.com" 
+                      placeholder="reda@burger-staff.com" 
                       {...field}
                       className={`${isMobile ? 'h-11' : ''}`}
                     />
@@ -224,7 +224,7 @@ export function EmployeeForm({ defaultValues, onSubmit, onCancel }: EmployeeForm
                   </FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="(555) 123-4567" 
+                      placeholder="(+212) 601-234567" 
                       value={field.value}
                       onChange={handlePhoneChange}
                       onBlur={field.onBlur}

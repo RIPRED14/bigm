@@ -96,18 +96,18 @@ interface WorkHours {
 // Données mockées
 const mockProfile: EmployeeProfile = {
   id: 1,
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  phone: '06 12 34 56 78',
+  name: 'Reda',
+  email: 'reda@burger-staff.com',
+  phone: '(+212) 601-234567',
   avatarUrl: '',
   availability: 'Lundi - Vendredi: 10h - 22h, Weekend: 18h - 02h',
   startDate: new Date(2023, 0, 15),
-  restaurant: 'Burger Central',
-  address: '123 Rue de la Paix, 75001 Paris',
+  restaurant: 'Burger Staff Sync',
+  address: '123 Avenue Mohammed V, Casablanca',
   emergencyContact: {
-    name: 'Jane Doe',
-    phone: '06 98 76 54 32',
-    relationship: 'Conjoint'
+    name: 'Sami',
+    phone: '(+212) 602-345678',
+    relationship: 'Collègue'
   },
   contractType: 'CDI',
   employeeId: 'EMP-2023-0042',

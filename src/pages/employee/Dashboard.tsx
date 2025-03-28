@@ -51,10 +51,10 @@ interface Notification {
 // Données mockées pour démonstration
 const currentUser = {
   id: 1,
-  name: 'John Doe',
+  name: 'Reda',
   avatarUrl: '',
   status: 'Actif',
-  restaurant: 'Burger Central',
+  restaurant: 'Burger Staff Sync',
   position: 'Serveur',
   hoursThisMonth: 76,
   targetHours: 120
@@ -97,8 +97,8 @@ const mockShifts: Shift[] = [
     startTime: '15:00',
     endTime: '23:00',
     status: 'confirmé',
-    restaurant: 'Burger Central',
-    coworkers: ['Emma S.', 'Michael T.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami', 'Afif']
   },
   {
     id: '2',
@@ -106,8 +106,8 @@ const mockShifts: Shift[] = [
     startTime: '18:00',
     endTime: '00:00',
     status: 'confirmé',
-    restaurant: 'Burger Central',
-    coworkers: ['Thomas L.', 'Sophie M.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami', 'Afif']
   },
   {
     id: '3',
@@ -115,8 +115,8 @@ const mockShifts: Shift[] = [
     startTime: '11:00',
     endTime: '19:00',
     status: 'en attente',
-    restaurant: 'Burger Central',
-    coworkers: ['Marie C.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Afif']
   }
 ];
 
@@ -134,7 +134,7 @@ const mockNotifications: Notification[] = [
   {
     id: '3',
     type: 'échange',
-    message: 'Mike vous a envoyé une demande d\'échange de shift',
+    message: 'Sami vous a envoyé une demande d\'échange de shift',
     timestamp: new Date(Date.now() - 172800000), // avant-hier
     read: false,
     link: '/employee/exchanges',

@@ -99,28 +99,28 @@ const myShifts: Shift[] = [
     date: new Date(),
     startTime: '15:00',
     endTime: '23:00',
-    restaurant: 'Burger Central'
+    restaurant: 'Burger Staff Sync'
   },
   {
     id: '2',
     date: addDays(new Date(), 3),
     startTime: '10:00',
     endTime: '18:00',
-    restaurant: 'Burger Downtown'
+    restaurant: 'Burger Staff Sync'
   },
   {
     id: '3',
     date: addDays(new Date(), 5),
     startTime: '18:00',
     endTime: '02:00',
-    restaurant: 'Burger Central'
+    restaurant: 'Burger Staff Sync'
   },
   {
     id: '4',
     date: addDays(new Date(), 7),
     startTime: '09:00',
     endTime: '17:00',
-    restaurant: 'Burger Express'
+    restaurant: 'Burger Staff Sync'
   }
 ];
 
@@ -128,7 +128,7 @@ const myShifts: Shift[] = [
 const colleagues: Employee[] = [
   {
     id: '1',
-    name: 'Emma Smith',
+    name: 'Sami',
     avatarUrl: '',
     shifts: [
       {
@@ -136,20 +136,20 @@ const colleagues: Employee[] = [
         date: addDays(new Date(), 1),
         startTime: '12:00',
         endTime: '20:00',
-        restaurant: 'Burger Central'
+        restaurant: 'Burger Staff Sync'
       },
       {
         id: 'c1-2',
         date: addDays(new Date(), 4),
         startTime: '09:00',
         endTime: '17:00',
-        restaurant: 'Burger Downtown'
+        restaurant: 'Burger Staff Sync'
       }
     ]
   },
   {
     id: '2',
-    name: 'Thomas Lee',
+    name: 'Afif',
     avatarUrl: '',
     shifts: [
       {
@@ -157,35 +157,14 @@ const colleagues: Employee[] = [
         date: addDays(new Date(), 2),
         startTime: '15:00',
         endTime: '23:00',
-        restaurant: 'Burger Express'
+        restaurant: 'Burger Staff Sync'
       },
       {
         id: 'c2-2',
         date: addDays(new Date(), 6),
         startTime: '18:00',
         endTime: '02:00',
-        restaurant: 'Burger Central'
-      }
-    ]
-  },
-  {
-    id: '3',
-    name: 'Sophie Martin',
-    avatarUrl: '',
-    shifts: [
-      {
-        id: 'c3-1',
-        date: addDays(new Date(), 3),
-        startTime: '11:00',
-        endTime: '19:00',
-        restaurant: 'Burger Downtown'
-      },
-      {
-        id: 'c3-2',
-        date: addDays(new Date(), 5),
-        startTime: '09:00',
-        endTime: '17:00',
-        restaurant: 'Burger Express'
+        restaurant: 'Burger Staff Sync'
       }
     ]
   }
@@ -200,18 +179,18 @@ const mockExchanges: ShiftExchange[] = [
       date: addDays(new Date(), 3),
       startTime: '10:00',
       endTime: '18:00',
-      restaurant: 'Burger Downtown'
+      restaurant: 'Burger Staff Sync'
     },
     targetShift: {
       id: 'c1-1',
       date: addDays(new Date(), 1),
       startTime: '12:00',
       endTime: '20:00',
-      restaurant: 'Burger Central'
+      restaurant: 'Burger Staff Sync'
     },
     targetEmployee: {
       id: '1',
-      name: 'Emma Smith',
+      name: 'Sami',
       avatarUrl: ''
     },
     reason: 'Je dois participer à un événement familial ce jour-là.',
@@ -225,18 +204,18 @@ const mockExchanges: ShiftExchange[] = [
       date: new Date(),
       startTime: '15:00',
       endTime: '23:00',
-      restaurant: 'Burger Central'
+      restaurant: 'Burger Staff Sync'
     },
     targetShift: {
       id: 'c2-2',
       date: addDays(new Date(), 6),
       startTime: '18:00',
       endTime: '02:00',
-      restaurant: 'Burger Central'
+      restaurant: 'Burger Staff Sync'
     },
     targetEmployee: {
       id: '2',
-      name: 'Thomas Lee',
+      name: 'Afif',
       avatarUrl: ''
     },
     reason: 'Rendez-vous médical important.',
@@ -251,7 +230,7 @@ const mockExchanges: ShiftExchange[] = [
       date: addDays(new Date(), 5),
       startTime: '18:00',
       endTime: '02:00',
-      restaurant: 'Burger Central'
+      restaurant: 'Burger Staff Sync'
     },
     targetShift: {
       id: 'c3-1',

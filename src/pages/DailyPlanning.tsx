@@ -22,7 +22,8 @@ import {
   Copy,
   Bell,
   X,
-  Info
+  Info,
+  Share2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, addDays, subDays } from 'date-fns';
@@ -46,6 +47,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 // Types simplifiés
 type Shift = {
@@ -79,9 +81,9 @@ type Notification = {
 
 // Données mockées simplifiées
 const mockEmployees: Employee[] = [
-  { id: 1, name: 'John Doe', weeklyHours: 20, preferredTimes: ['morning'] },
-  { id: 2, name: 'Jane Smith', weeklyHours: 32, preferredTimes: ['evening'] },
-  { id: 3, name: 'Michael Johnson', weeklyHours: 25, preferredTimes: ['morning', 'evening'] }
+  { id: 1, name: 'Reda', weeklyHours: 35, preferredTimes: ['morning', 'evening'] },
+  { id: 2, name: 'Sami', weeklyHours: 30, preferredTimes: ['evening'] },
+  { id: 3, name: 'Afif', weeklyHours: 25, preferredTimes: ['morning'] }
 ];
 
 const mockShifts: Shift[] = [
@@ -114,6 +116,8 @@ const DailyPlanning: React.FC = () => {
   const [conflicts, setConflicts] = useState<{employeeId: number, shifts: Shift[]}[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
+  const [isScheduleShared, setIsScheduleShared] = useState<boolean>(false);
+  const [showShareDialog, setShowShareDialog] = useState<boolean>(false);
   
   // État pour le nouveau shift dans le modal
   const [newShift, setNewShift] = useState({
@@ -515,22 +519,49 @@ const DailyPlanning: React.FC = () => {
     const existingShifts = shifts.filter(shift => shift.day === dayIndex);
     const updatedShifts = shifts.filter(shift => shift.day !== dayIndex);
     
-    // Créneaux horaires à couvrir
+    // Si des shifts existent déjà pour ce jour, demander confirmation
+    if (existingShifts.length > 0) {
+      if (!window.confirm(`Cette action va remplacer ${existingShifts.length} shift(s) existant(s) pour ${dayNames[dayIndex]}. Voulez-vous continuer?`)) {
+        return;
+      }
+    }
+    
+    // Créneaux horaires à couvrir - adapter selon les heures d'ouverture
     const timeSlotsToCover = [
-      { start: "11:00", end: "15:00", priority: "high" },
-      { start: "14:00", end: "18:00", priority: "medium" },
-      { start: "17:00", end: "21:00", priority: "high" },
-      { start: "20:00", end: "23:00", priority: "medium" }
+      { start: "11:00", end: "15:00", priority: "high", description: "Service midi" },
+      { start: "14:00", end: "18:00", priority: "medium", description: "Transition" },
+      { start: "17:00", end: "21:00", priority: "high", description: "Service soir" },
+      { start: "20:00", end: "00:00", priority: "medium", description: "Fermeture" }
     ];
     
-    let nextId = Math.max(...shifts.map(s => s.id)) + 1;
+    let nextId = shifts.length > 0 ? Math.max(...shifts.map(s => s.id)) + 1 : 1;
     const newShifts: Shift[] = [];
+    
+    // Calculer les heures hebdomadaires actuelles pour chaque employé
+    const weeklyHours: Record<number, number> = {};
+    employees.forEach(emp => {
+      weeklyHours[emp.id] = 0;
+      updatedShifts.forEach(shift => {
+        if (shift.employeeIds.includes(emp.id)) {
+          const startHour = parseInt(shift.startTime.split(':')[0]);
+          const endHour = parseInt(shift.endTime.split(':')[0]);
+          let hours = 0;
+          
+          if (endHour > startHour) {
+            hours = endHour - startHour;
+          } else {
+            // Passage minuit
+            hours = (24 - startHour) + endHour;
+          }
+          
+          weeklyHours[emp.id] += hours;
+        }
+      });
+    });
     
     // Trier les employés par nombre d'heures déjà travaillées
     const sortedEmployees = [...employees].sort((a, b) => {
-      const aHours = updatedShifts.filter(s => s.employeeIds.includes(a.id)).length * 4;
-      const bHours = updatedShifts.filter(s => s.employeeIds.includes(b.id)).length * 4;
-      return aHours - bHours;
+      return weeklyHours[a.id] - weeklyHours[b.id];
     });
     
     // Créer un shift pour chaque créneau
@@ -551,6 +582,12 @@ const DailyPlanning: React.FC = () => {
         
         if (alreadyAssigned) return false;
         
+        // Vérifier si l'employé dépasse les heures hebdomadaires maximales
+        const slotHoursDuration = calculateDuration(slot.start, slot.end);
+        if (weeklyHours[employee.id] + slotHoursDuration > scheduleRules.maxWeeklyHoursPerEmployee) {
+          return false;
+        }
+        
         // Vérifier les préférences si définies
         if (employee.preferredTimes && employee.preferredTimes.length > 0) {
           const hour = parseInt(slot.start);
@@ -566,15 +603,21 @@ const DailyPlanning: React.FC = () => {
       
       // Si nous avons des employés appropriés, créer le shift
       if (suitableEmployees.length > 0) {
-      const newShift: Shift = {
+        const newShift: Shift = {
           id: nextId++,
           employeeIds: suitableEmployees.map(emp => emp.id),
           day: dayIndex,
           startTime: slot.start,
           endTime: slot.end,
-        status: 'confirmed'
-      };
-      
+          status: 'confirmed'
+        };
+        
+        // Mettre à jour les heures hebdomadaires
+        suitableEmployees.forEach(emp => {
+          const slotHoursDuration = calculateDuration(slot.start, slot.end);
+          weeklyHours[emp.id] += slotHoursDuration;
+        });
+        
         newShifts.push(newShift);
       }
     });
@@ -582,11 +625,44 @@ const DailyPlanning: React.FC = () => {
     // Mettre à jour le planning
     setShifts([...updatedShifts, ...newShifts]);
     
-    toast.success(`Planning optimisé pour ${dayNames[dayIndex]}`, {
-      description: `${existingShifts.length} shift(s) existant(s) remplacés par ${newShifts.length} nouveaux shifts`
-    });
+    // Notification enrichie
+    if (newShifts.length > 0) {
+      addNotification(
+        'success',
+        `Planning optimisé pour ${dayNames[dayIndex]}`,
+        `${existingShifts.length} shift(s) existant(s) remplacés par ${newShifts.length} nouveaux shifts. Créneaux couverts: ${newShifts.map(s => `${s.startTime}-${s.endTime}`).join(', ')}`,
+        {
+          label: 'Valider',
+          handler: validateSchedule
+        }
+      );
+    } else {
+      addNotification(
+        'warning',
+        `Aucun shift n'a pu être généré`,
+        `Tous les employés ont atteint leur quota d'heures ou aucun n'est disponible pour les créneaux requis.`,
+        {
+          label: 'Ajouter manuellement',
+          handler: () => handleOpenAddDialog()
+        }
+      );
+    }
     
+    // Vérifier les conflits potentiels
     detectConflicts();
+  };
+  
+  // Fonction utilitaire pour calculer la durée entre deux heures
+  const calculateDuration = (startTime: string, endTime: string) => {
+    const startHour = parseInt(startTime.split(':')[0]);
+    const endHour = parseInt(endTime.split(':')[0]);
+    
+    if (endHour >= startHour) {
+      return endHour - startHour;
+    } else {
+      // Passage minuit
+      return (24 - startHour) + endHour;
+    }
   };
   
   // Générer un résumé hebdomadaire simplifié
@@ -627,10 +703,23 @@ const DailyPlanning: React.FC = () => {
     
     // Vérifier les conflits
     if (conflicts.length > 0) {
+      const conflictedEmployees = conflicts.map(c => employees.find(e => e.id === c.employeeId)?.name || `Employé ${c.employeeId}`).join(', ');
       alerts.push({
         type: 'error',
         title: 'Conflits d\'horaires détectés',
-        description: `${conflicts.length} employé(s) ont des shifts qui se chevauchent`
+        description: `${conflicts.length} employé(s) ont des shifts qui se chevauchent: ${conflictedEmployees}`,
+        action: {
+          label: 'Résoudre',
+          handler: () => {
+            // Accéder au premier conflit
+            if (conflicts.length > 0) {
+              const firstConflict = conflicts[0];
+              if (firstConflict.shifts.length > 0) {
+                handleOpenEditDialog(firstConflict.shifts[0].id);
+              }
+            }
+          }
+        }
       });
     }
     
@@ -638,26 +727,48 @@ const DailyPlanning: React.FC = () => {
     
     // 1. Vérifier si la journée est complète (tous les créneaux d'ouverture ont au moins un employé)
     const shiftsForDay = getShiftsForDay(dayIndex);
-    const emptyCreneau = scheduleRules.timeSlots.some(timeSlot => {
+    const emptyTimeSlots = scheduleRules.timeSlots.filter(timeSlot => {
       // Vérifier si un créneau n'a aucun employé assigné
       return !shiftsForDay.some(shift => isTimeInShift(timeSlot, shift));
     });
     
-    if (emptyCreneau) {
+    if (emptyTimeSlots.length > 0) {
+      const formattedTimeSlots = emptyTimeSlots.map(slot => formatTimeDisplay(slot)).join(', ');
       alerts.push({
         type: 'error',
         title: 'Journée incomplète',
-        description: 'Certains créneaux d\'ouverture n\'ont aucun employé assigné'
+        description: `Créneaux sans employé: ${formattedTimeSlots}`,
+        action: {
+          label: 'Ajouter un shift',
+          handler: () => {
+            // Suggérer le premier créneau vide comme heure de début
+            if (emptyTimeSlots.length > 0) {
+              handleOpenAddDialog(emptyTimeSlots[0]);
+            } else {
+              handleOpenAddDialog();
+            }
+          }
+        }
       });
     }
     
     // 2. Vérifier les shifts vides
     const emptyShifts = shiftsForDay.filter(shift => shift.employeeIds.length === 0);
     if (emptyShifts.length > 0) {
+      const formattedShifts = emptyShifts.map(s => `${formatTimeDisplay(s.startTime)}-${formatTimeDisplay(s.endTime)}`).join(', ');
       alerts.push({
         type: 'error',
         title: 'Shift(s) vide(s)',
-        description: `${emptyShifts.length} shift(s) n'ont aucun employé affecté`
+        description: `Shifts sans employé: ${formattedShifts}`,
+        action: {
+          label: 'Corriger',
+          handler: () => {
+            // Éditer le premier shift vide
+            if (emptyShifts.length > 0) {
+              handleOpenEditDialog(emptyShifts[0].id);
+            }
+          }
+        }
       });
     }
     
@@ -671,23 +782,45 @@ const DailyPlanning: React.FC = () => {
     
     // Compter le nombre unique d'employés après 18h
     const employeesAfter18h = new Set();
+    const eveningShifts = [];
+    
     eveningTimeSlots.forEach(timeSlot => {
       shiftsForDay
         .filter(shift => isTimeInShift(timeSlot, shift))
         .forEach(shift => {
+          eveningShifts.push(shift);
           shift.employeeIds.forEach(empId => {
             employeesAfter18h.add(empId);
           });
         });
     });
     
+    const uniqueEveningShifts = [...new Set(eveningShifts.map(s => s.id))];
     const insufficientEveningStaffing = employeesAfter18h.size < scheduleRules.minEmployeesAfter18h;
     
     if (insufficientEveningStaffing) {
       alerts.push({
         type: 'warning',
         title: 'Effectif insuffisant en soirée',
-        description: `Seulement ${employeesAfter18h.size} employé(s) sur ${scheduleRules.minEmployeesAfter18h} minimum après 18h`
+        description: `${employeesAfter18h.size}/${scheduleRules.minEmployeesAfter18h} employés requis après 18h`,
+        action: {
+          label: 'Ajouter employé',
+          handler: () => {
+            // Éditer le premier shift du soir s'il existe, sinon créer un nouveau
+            if (uniqueEveningShifts.length > 0) {
+              handleOpenEditDialog(uniqueEveningShifts[0]);
+            } else {
+              // Créer un nouveau shift pour la soirée (18h-22h)
+              setNewShift({
+                startTime: '18:00',
+                endTime: '22:00',
+                employeeIds: [],
+                selectedDays: [dayIndex]
+              });
+              setShowAddDialog(true);
+            }
+          }
+        }
       });
     }
     
@@ -701,22 +834,37 @@ const DailyPlanning: React.FC = () => {
     });
     
     if (excessiveStaffingSlots.length > 0) {
+      const formattedSlots = excessiveStaffingSlots.map(slot => formatTimeDisplay(slot)).join(', ');
+      
       alerts.push({
         type: 'warning',
         title: 'Effectif excessif',
-        description: `${excessiveStaffingSlots.length} créneau(x) ont plus de ${scheduleRules.maxEmployeesPerTimeSlot} employés`
+        description: `Créneaux surchargés: ${formattedSlots}`,
+        action: {
+          label: 'Optimiser',
+          handler: () => {
+            // Trouver les shifts concernés
+            const shiftsToCheck = shiftsForDay.filter(shift => 
+              excessiveStaffingSlots.some(slot => isTimeInShift(slot, shift))
+            );
+            
+            if (shiftsToCheck.length > 0) {
+              handleOpenEditDialog(shiftsToCheck[0].id);
+            }
+          }
+        }
       });
     }
     
     // 3. Vérifier les heures hebdomadaires élevées par employé
     const employeeWeeklyHours: Record<number, number> = {};
     
-    // Calculer les heures pour chaque employé sur toute la semaine
+    // Calculer les heures pour chaque employé sur toute la semaine en utilisant calculateDuration
     for (let day = 0; day < 7; day++) {
       const dayShifts = shifts.filter(shift => shift.day === day);
       
       dayShifts.forEach(shift => {
-        const shiftHours = parseInt(shift.endTime) - parseInt(shift.startTime);
+        const shiftHours = calculateDuration(shift.startTime, shift.endTime);
         
         shift.employeeIds.forEach(empId => {
           if (!employeeWeeklyHours[empId]) {
@@ -730,19 +878,50 @@ const DailyPlanning: React.FC = () => {
     // Trouver les employés qui dépassent le seuil
     const overworkedEmployees = Object.entries(employeeWeeklyHours)
       .filter(([_, hours]) => Number(hours) > scheduleRules.maxWeeklyHoursPerEmployee)
-      .map(([empId]) => employees.find(e => e.id === parseInt(empId))?.name || `Employé ${empId}`);
+      .map(([empId, hours]) => ({
+        id: parseInt(empId),
+        name: employees.find(e => e.id === parseInt(empId))?.name || `Employé ${empId}`,
+        hours: Number(hours)
+      }));
     
     if (overworkedEmployees.length > 0) {
+      const employeesList = overworkedEmployees.map(e => `${e.name} (${e.hours.toFixed(1)}h)`).join(', ');
+      
       alerts.push({
         type: 'warning',
         title: 'Heures hebdomadaires excessives',
-        description: `${overworkedEmployees.join(', ')} ${overworkedEmployees.length > 1 ? 'dépassent' : 'dépasse'} ${scheduleRules.maxWeeklyHoursPerEmployee}h/semaine`
+        description: `${employeesList} > ${scheduleRules.maxWeeklyHoursPerEmployee}h/semaine`,
+        action: {
+          label: 'Voir employés',
+          handler: () => {
+            // Afficher les shifts de l'employé qui travaille le plus
+            const mostOverworked = overworkedEmployees.reduce((prev, curr) => 
+              prev.hours > curr.hours ? prev : curr
+            );
+            
+            // Trouver le premier shift de cet employé aujourd'hui
+            const employeeShift = shiftsForDay.find(shift => 
+              shift.employeeIds.includes(mostOverworked.id)
+            );
+            
+            if (employeeShift) {
+              handleOpenEditDialog(employeeShift.id);
+            } else {
+              // Si pas de shift aujourd'hui, afficher un message
+              addNotification(
+                'info',
+                'Heures excessives',
+                `${mostOverworked.name} a ${mostOverworked.hours.toFixed(1)}h programmées cette semaine (maximum: ${scheduleRules.maxWeeklyHoursPerEmployee}h)`
+              );
+            }
+          }
+        }
       });
     }
     
     // ALERTE DE VALIDATION (VERT)
     const hasCriticalIssues = alerts.some(alert => alert.type === 'error');
-    if (!hasCriticalIssues && !emptyCreneau) {
+    if (!hasCriticalIssues && emptyTimeSlots.length === 0) {
       alerts.push({
         type: 'success',
         title: 'Planning validé',
@@ -753,10 +932,16 @@ const DailyPlanning: React.FC = () => {
     // Vérifier la couverture minimale
     const totalHours = getDayTotalHours(dayIndex);
     if (totalHours < scheduleRules.minHoursPerDay) {
+      const missingHours = scheduleRules.minHoursPerDay - totalHours;
+      
       alerts.push({
         type: 'warning',
         title: 'Couverture insuffisante',
-        description: `Il manque ${scheduleRules.minHoursPerDay - totalHours}h pour atteindre le minimum de ${scheduleRules.minHoursPerDay}h`
+        description: `Il manque ${missingHours.toFixed(1)}h pour atteindre le minimum (${totalHours.toFixed(1)}/${scheduleRules.minHoursPerDay}h)`,
+        action: {
+          label: 'Ajouter shift',
+          handler: () => handleOpenAddDialog()
+        }
       });
     }
     
@@ -766,7 +951,18 @@ const DailyPlanning: React.FC = () => {
       alerts.push({
         type: 'warning',
         title: 'Trop d\'employés programmés',
-        description: `${uniqueEmployees} employés programmés (maximum recommandé: ${scheduleRules.maxEmployeesPerDay})`
+        description: `${uniqueEmployees}/${scheduleRules.maxEmployeesPerDay} employés recommandés`,
+        action: {
+          label: 'Optimiser',
+          handler: () => {
+            // Afficher le planning pour permettre de réorganiser
+            addNotification(
+              'info',
+              'Optimisation recommandée',
+              `Vous pouvez réduire le nombre d'employés en optimisant les shifts ou en allongeant les horaires de travail`
+            );
+          }
+        }
       });
     }
     
@@ -827,28 +1023,126 @@ const DailyPlanning: React.FC = () => {
   
   // Function pour obtenir les alertes d'un jour spécifique (pour le résumé hebdomadaire)
   const getDayAlerts = (dayIndex: number) => {
-    // Ici on fait une simulation des alertes pour chaque jour
-    // Dans un cas réel, on devrait réutiliser la logique de getAlerts() mais avec le dayIndex spécifié
-    
+    // Implémentation complète des alertes pour chaque jour, similaire à getAlerts
     const dayShifts = shifts.filter(shift => shift.day === dayIndex);
-    const emptyCreneau = scheduleRules.timeSlots.some(timeSlot => 
+    
+    // Vérifier les créneaux vides
+    const emptyTimeSlots = scheduleRules.timeSlots.filter(timeSlot => 
       !dayShifts.some(shift => isTimeInShift(timeSlot, shift))
     );
     
     const alerts = [];
     
-    if (emptyCreneau) {
-      alerts.push({ type: 'error', title: 'Journée incomplète' });
+    // ALERTES CRITIQUES (ROUGE)
+    
+    // 1. Vérifier si la journée est complète
+    if (emptyTimeSlots.length > 0) {
+      alerts.push({ 
+        type: 'error', 
+        title: 'Journée incomplète',
+        details: `${emptyTimeSlots.length} créneaux non couverts` 
+      });
     }
     
-    const totalHours = dayShifts.reduce((total, shift) => {
-      const startHour = parseInt(shift.startTime.split(':')[0]);
-      const endHour = parseInt(shift.endTime.split(':')[0]);
-      return total + (endHour - startHour);
-    }, 0);
+    // 2. Vérifier les shifts vides
+    const emptyShifts = dayShifts.filter(shift => shift.employeeIds.length === 0);
+    if (emptyShifts.length > 0) {
+      alerts.push({ 
+        type: 'error', 
+        title: 'Shift(s) vide(s)',
+        details: `${emptyShifts.length} shift(s) sans employé` 
+      });
+    }
     
+    // 3. Vérifier les conflits pour ce jour
+    const dayConflicts = conflicts.filter(conflict => 
+      conflict.shifts.some(shift => shift.day === dayIndex)
+    );
+    
+    if (dayConflicts.length > 0) {
+      alerts.push({ 
+        type: 'error', 
+        title: 'Conflits d\'horaires',
+        details: `${dayConflicts.length} employé(s) en conflit` 
+      });
+    }
+    
+    // ALERTES DE MISE EN GARDE (JAUNE)
+    
+    // 1. Vérifier la couverture minimale
+    const totalHours = getDayTotalHours(dayIndex);
     if (totalHours < scheduleRules.minHoursPerDay) {
-      alerts.push({ type: 'warning', title: 'Couverture insuffisante' });
+      alerts.push({ 
+        type: 'warning', 
+        title: 'Couverture insuffisante',
+        details: `${totalHours.toFixed(1)}/${scheduleRules.minHoursPerDay}h minimum` 
+      });
+    }
+    
+    // 2. Vérifier l'effectif insuffisant après 18h
+    const eveningTimeSlots = scheduleRules.timeSlots.filter(slot => {
+      const hour = parseInt(slot.split(':')[0]);
+      return hour >= 18 && hour <= 7;
+    });
+    
+    // Compter le nombre unique d'employés après 18h
+    const employeesAfter18h = new Set();
+    
+    eveningTimeSlots.forEach(timeSlot => {
+      dayShifts
+        .filter(shift => isTimeInShift(timeSlot, shift))
+        .forEach(shift => {
+          shift.employeeIds.forEach(empId => {
+            employeesAfter18h.add(empId);
+          });
+        });
+    });
+    
+    if (employeesAfter18h.size < scheduleRules.minEmployeesAfter18h && eveningTimeSlots.length > 0) {
+      alerts.push({ 
+        type: 'warning', 
+        title: 'Effectif insuffisant en soirée',
+        details: `${employeesAfter18h.size}/${scheduleRules.minEmployeesAfter18h} employés requis` 
+      });
+    }
+    
+    // 3. Vérifier l'effectif excessif par créneau
+    const excessiveStaffingSlots = scheduleRules.timeSlots.filter(timeSlot => {
+      const employeesForSlot = dayShifts
+        .filter(shift => isTimeInShift(timeSlot, shift))
+        .reduce((count, shift) => count + shift.employeeIds.length, 0);
+      
+      return employeesForSlot > scheduleRules.maxEmployeesPerTimeSlot;
+    });
+    
+    if (excessiveStaffingSlots.length > 0) {
+      alerts.push({ 
+        type: 'warning', 
+        title: 'Effectif excessif',
+        details: `${excessiveStaffingSlots.length} créneau(x) surchargé(s)` 
+      });
+    }
+    
+    // 4. Vérifier le nombre d'employés
+    const uniqueEmployees = new Set(dayShifts.flatMap(shift => shift.employeeIds)).size;
+    if (uniqueEmployees > scheduleRules.maxEmployeesPerDay) {
+      alerts.push({ 
+        type: 'warning', 
+        title: 'Trop d\'employés programmés',
+        details: `${uniqueEmployees}/${scheduleRules.maxEmployeesPerDay} recommandés`
+      });
+    }
+    
+    // ALERTE DE VALIDATION (VERT)
+    const hasCriticalIssues = alerts.some(alert => alert.type === 'error');
+    const hasWarnings = alerts.some(alert => alert.type === 'warning');
+    
+    if (!hasCriticalIssues && !hasWarnings && emptyTimeSlots.length === 0) {
+      alerts.push({ 
+        type: 'success', 
+        title: 'Jour validé',
+        details: `${totalHours.toFixed(1)}h avec ${uniqueEmployees} employé(s)` 
+      });
     }
     
     return alerts;
@@ -932,7 +1226,7 @@ const DailyPlanning: React.FC = () => {
         addNotification(
           'success',
           'Shift modifié',
-          `Le shift de ${formatTimeDisplay(newShift.startTime)} à ${formatTimeDisplay(newShift.endTime)} a été mis à jour avec ${employees || 'John Doe'}`
+          `Le shift de ${formatTimeDisplay(newShift.startTime)} à ${formatTimeDisplay(newShift.endTime)} a été mis à jour avec ${employees || 'Reda'}`
         );
       } else {
         // Vérifier qu'au moins un jour est sélectionné
@@ -948,7 +1242,7 @@ const DailyPlanning: React.FC = () => {
         // Ajouter un nouveau shift pour chaque jour sélectionné
         let maxId = shifts.length > 0 ? Math.max(...shifts.map(s => s.id)) : 0;
         // Utiliser un Set pour éliminer les doublons d'employés
-        const uniqueEmployeeIds = [...new Set(newShift.employeeIds.length > 0 ? newShift.employeeIds : [1])];
+        const uniqueEmployeeIds = [...new Set(newShift.employeeIds.length > 0 ? newShift.employeeIds : [1])]; // Reda par défaut si aucun employé sélectionné
         
         // Avertir si certains employés ont déjà beaucoup d'heures cette semaine
         const employeesWithManyHours: string[] = [];
@@ -1019,7 +1313,7 @@ const DailyPlanning: React.FC = () => {
         addNotification(
           'success',
           `${newShifts.length} shift(s) ajouté(s)`,
-          `${daysList} de ${formatTimeDisplay(newShift.startTime)} à ${formatTimeDisplay(newShift.endTime)} avec ${employeesList || 'John Doe'}`,
+          `${daysList} de ${formatTimeDisplay(newShift.startTime)} à ${formatTimeDisplay(newShift.endTime)} avec ${employeesList || 'Reda'}`,
           {
             label: 'Voir dans le planning',
             handler: () => {
@@ -1140,6 +1434,69 @@ const DailyPlanning: React.FC = () => {
       }
       
       return Math.round(totalHours * 10) / 10; // Arrondi à 1 décimale
+    };
+    
+    // Fonction pour partager le planning avec les employés
+    const handleShareSchedule = () => {
+      // Vérifier si le planning a des alertes
+      const alerts = getAlerts();
+      const hasCriticalIssues = alerts.some(alert => alert.type === 'error');
+      const hasWarnings = alerts.some(alert => alert.type === 'warning');
+      
+      let warningMessage = "";
+      
+      // Plutôt que de bloquer, afficher une confirmation
+      if (hasCriticalIssues) {
+        const criticalAlerts = alerts.filter(alert => alert.type === 'error');
+        warningMessage = `Attention: Le planning contient ${criticalAlerts.length} problème(s) critique(s): ${criticalAlerts.map(a => a.title).join(', ')}.\n\n`;
+      }
+      
+      if (hasWarnings) {
+        const warningAlerts = alerts.filter(alert => alert.type === 'warning');
+        warningMessage += `Le planning contient également ${warningAlerts.length} alerte(s) de mise en garde.\n\n`;
+      }
+      
+      // Vérifier la couverture minimale pour chaque jour
+      const incompleteDays = [0, 1, 2, 3, 4, 5, 6].filter(day => {
+        const dayShifts = getShiftsForDay(day);
+        const totalHours = getDayTotalHours(day);
+        return totalHours < scheduleRules.minHoursPerDay;
+      });
+      
+      if (incompleteDays.length > 0) {
+        const daysNames = incompleteDays.map(day => dayNames[day]).join(', ');
+        warningMessage += `Les jours suivants n'ont pas le nombre minimum d'heures requis (${scheduleRules.minHoursPerDay}h): ${daysNames}.\n\n`;
+      }
+      
+      // Si des alertes existent, demander confirmation
+      if (warningMessage !== "") {
+        warningMessage += "Voulez-vous quand même partager le planning?";
+        if (!window.confirm(warningMessage)) {
+          return;
+        }
+        
+        // Notification pour informer l'utilisateur que le planning a été partagé malgré les problèmes
+        addNotification(
+          'warning',
+          'Planning partagé avec alertes',
+          'Le planning a été partagé malgré la présence de problèmes ou d\'alertes.'
+        );
+      }
+      
+      // Partager le planning sans condition de validation
+      setIsScheduleShared(true);
+      setShowShareDialog(false);
+      
+      // Afficher une notification de succès
+      addNotification(
+        'success',
+        'Planning partagé avec succès',
+        'Les employés peuvent maintenant voir leur planning pour la semaine',
+        {
+          label: 'Voir Planning',
+          handler: () => navigate('/planning-viewer')
+        }
+      );
     };
     
     return (
@@ -1276,13 +1633,29 @@ const DailyPlanning: React.FC = () => {
                   <Wand2 className="h-4 w-4 mr-1" />
                   Auto-fill
                 </Button>
-                <Button variant="default" size="sm" onClick={validateSchedule}>
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                  Valider
+                <Button 
+                  variant={isScheduleShared ? "secondary" : "outline"} 
+                  size="sm" 
+                  onClick={() => {
+                    setShowShareDialog(true);
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white focus:ring-2 focus:ring-blue-300"
+                >
+                  {isScheduleShared ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      Partagé
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-4 w-4 mr-1" />
+                      Partager
+                    </>
+                  )}
                 </Button>
               </div>
-                          </>
-                        ) : (
+            </>
+          ) : (
             <div className="grid grid-cols-5 gap-2">
               <Button variant="outline" size="sm" onClick={goToToday}>
                 <Calendar className="h-4 w-4 mr-1" />
@@ -1300,9 +1673,23 @@ const DailyPlanning: React.FC = () => {
                 <Wand2 className="h-4 w-4 mr-1" />
                 Auto-fill
               </Button>
-              <Button variant="default" size="sm" onClick={validateSchedule}>
-                <CheckCircle2 className="h-4 w-4 mr-1" />
-                Valider
+              <Button 
+                variant={isScheduleShared ? "secondary" : "outline"} 
+                size="sm" 
+                onClick={() => setShowShareDialog(true)}
+                className="bg-blue-500 hover:bg-blue-600 text-white focus:ring-2 focus:ring-blue-300"
+              >
+                {isScheduleShared ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                    Partagé
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-4 w-4 mr-1" />
+                    Partager
+                  </>
+                )}
               </Button>
             </div>
           )}
@@ -1956,16 +2343,195 @@ const DailyPlanning: React.FC = () => {
         {/* Bouton d'action flottant pour mobile */}
         {isMobile && (
           <div className="fixed bottom-4 right-4 z-10">
-                    <Button 
+            <Button 
               size="icon" 
               className="h-12 w-12 rounded-full shadow-lg"
               onClick={() => handleOpenAddDialog()}
             >
               <Plus className="h-6 w-6" />
-                    </Button>
-            </div>
-          )}
+            </Button>
           </div>
+        )}
+        
+        {/* Popup de partage du planning - Version optimisée pour mobile */}
+        {showShareDialog && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 touch-none animate-in fade-in duration-200" 
+               onClick={() => setShowShareDialog(false)}>
+            <div className="bg-white dark:bg-background rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-auto animate-in slide-in-from-bottom-10 duration-300"
+                 onClick={(e) => e.stopPropagation()}>
+              {/* Header fixe avec dégradé */}
+              <div className="sticky top-0 z-10 bg-gradient-to-b from-white to-white/95 dark:from-background dark:to-background/95 backdrop-blur-sm pt-5 pb-4 px-5 rounded-t-xl border-b">
+                <div className="flex justify-between items-center mb-1">
+                  <h2 className="text-xl font-bold">Partager le planning</h2>
+                  <button 
+                    className="rounded-full p-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => setShowShareDialog(false)}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Vérifiez l'état de chaque jour avant de partager
+                </p>
+              </div>
+              
+              <div className="p-5 space-y-5">
+                {/* Status général du planning */}
+                <div className="p-4 rounded-xl border-2 border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 flex-shrink-0" />
+                    <span className="font-medium text-amber-800 dark:text-amber-400 text-[15px]">Vérification du planning</span>
+                  </div>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 ml-[30px]">
+                    Vérifiez l'état de chaque jour avant de partager.
+                  </p>
+                </div>
+                
+                {/* Liste des jours avec statut - Style cards avec ombres */}
+                <div className="space-y-3 pb-1">
+                  {[0, 1, 2, 3, 4, 5, 6].map(dayIndex => {
+                    const totalHours = getDayTotalHours(dayIndex);
+                    const employeeCount = getUniqueEmployeesForDay(dayIndex).length;
+                    const dayAlerts = getDayAlerts(dayIndex);
+                    const hasCriticalAlerts = dayAlerts.some(alert => alert.type === 'error');
+                    const hasWarningAlerts = dayAlerts.some(alert => alert.type === 'warning');
+                    const isValid = !hasCriticalAlerts && !hasWarningAlerts;
+                    
+                    // Calculer la date du jour
+                    const dateOfDay = new Date(currentDate);
+                    const currentDayOfWeek = getDayIndex(currentDate);
+                    const daysToAdd = dayIndex - currentDayOfWeek;
+                    dateOfDay.setDate(dateOfDay.getDate() + daysToAdd);
+                    
+                    // Statut visuel
+                    let statusColor = "bg-gray-400";
+                    let statusText = "Non vérifié";
+                    let cardBg = "bg-gray-50 border-gray-200 dark:border-gray-700";
+                    
+                    if (hasCriticalAlerts) {
+                      statusColor = "bg-red-500";
+                      statusText = "À corriger";
+                      cardBg = "bg-gradient-to-br from-red-50 to-red-50/70 dark:from-red-900/20 dark:to-red-900/10 border-red-200 dark:border-red-800";
+                    } else if (hasWarningAlerts) {
+                      statusColor = "bg-amber-500";
+                      statusText = "À vérifier";
+                      cardBg = "bg-gradient-to-br from-amber-50 to-amber-50/70 dark:from-amber-900/20 dark:to-amber-900/10 border-amber-200 dark:border-amber-800";
+                    } else if (isValid) {
+                      statusColor = "bg-green-500";
+                      statusText = "Validé";
+                      cardBg = "bg-gradient-to-br from-green-50 to-green-50/70 dark:from-green-900/20 dark:to-green-900/10 border-green-200 dark:border-green-800";
+                    }
+                    
+                    return (
+                      <div 
+                        key={dayIndex}
+                        className={`p-4 rounded-xl border shadow-sm ${cardBg}`}
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-[15px]">{dayNames[dayIndex]}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(dateOfDay, 'd MMMM', { locale: fr })}
+                              </span>
+                            </div>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${statusColor} text-white font-medium ml-1`}>
+                              {statusText}
+                            </span>
+                          </div>
+                          <div className="text-sm font-medium">
+                            {totalHours.toFixed(1)}h
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between text-sm text-muted-foreground mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <Users className="h-3.5 w-3.5" />
+                            <span>{employeeCount} employés</span>
+                          </div>
+                        </div>
+                        
+                        {/* Liste des alertes pour ce jour */}
+                        {dayAlerts.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 space-y-1.5">
+                            {dayAlerts
+                              .filter(alert => alert.type !== 'success')
+                              .map((alert, idx) => (
+                                <div 
+                                  key={idx}
+                                  className={`text-xs flex items-start gap-1.5 ${
+                                    alert.type === 'error' ? 'text-red-600 dark:text-red-400' :
+                                    alert.type === 'warning' ? 'text-amber-600 dark:text-amber-400' :
+                                    'text-muted-foreground'
+                                  }`}
+                                >
+                                  {alert.type === 'error' && <AlertCircle className="h-3 w-3 mt-0.5 flex-shrink-0" />}
+                                  {alert.type === 'warning' && <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />}
+                                  <div>
+                                    <span className="font-medium">{alert.title}</span>
+                                    {alert.details && (
+                                      <span className="ml-1 opacity-80">{alert.details}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Récapitulatif général */}
+                <div className="p-3 rounded-xl border-2 border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="font-medium text-blue-800 dark:text-blue-400">Récapitulatif</span>
+                  </div>
+                  <div className="text-sm text-blue-700 dark:text-blue-300 pl-6 space-y-1">
+                    <p>Total: {(() => {
+                      let total = 0;
+                      for (let i = 0; i < 7; i++) {
+                        total += getDayTotalHours(i);
+                      }
+                      return total.toFixed(1);
+                    })()}h sur la semaine</p>
+                    <p>Employés: {(() => {
+                      const uniqueEmployees = new Set();
+                      shifts.forEach(shift => {
+                        shift.employeeIds.forEach(id => uniqueEmployees.add(id));
+                      });
+                      return uniqueEmployees.size;
+                    })()} au total</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Footer fixe avec dégradé */}
+              <div className="sticky bottom-0 z-10 p-5 border-t bg-gradient-to-t from-white to-white/95 dark:from-background dark:to-background/95 backdrop-blur-sm rounded-b-xl">
+                <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                  <button 
+                    className="py-3 px-5 border rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    onClick={() => setShowShareDialog(false)}
+                  >
+                    Annuler
+                  </button>
+                  <button 
+                    className="py-3 px-5 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-xl text-sm font-medium transition-colors flex justify-center items-center gap-2"
+                    onClick={() => {
+                      handleShareSchedule();
+                      setShowShareDialog(false);
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Partager le planning
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </PageContainer>
   );
 };

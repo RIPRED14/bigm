@@ -54,7 +54,7 @@ const Login = () => {
     // Simulation d'une requête d'authentification avec délai
     setTimeout(() => {
       // Mock authentication
-      if (email === 'employee@example.com' && password === 'password') {
+      if (email === 'reda@burger-staff.com' && password === 'password') {
         // Connexion réussie en tant qu'employé
         console.log('Connexion réussie: EMPLOYÉ');
         auth?.setIsLoggedIn(true);
@@ -198,7 +198,7 @@ const Login = () => {
                         <Input
                           id="email"
                           type="email"
-                          placeholder={activeTab === 'employee' ? 'employee@example.com' : 'manager@example.com'}
+                          placeholder={activeTab === 'employee' ? 'reda@burger-staff.com' : 'manager@example.com'}
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           className={`${isMobile ? 'h-10 text-sm' : 'h-11'}`}
@@ -233,7 +233,7 @@ const Login = () => {
                 <CardFooter className={`flex justify-center border-t ${isMobile ? 'px-4 py-3 text-xs' : 'px-6 py-4'}`}>
                   <div className={`${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
                     {activeTab === 'employee' 
-                      ? 'Pour la démo: employee@example.com / password' 
+                      ? 'Pour la démo: reda@burger-staff.com / password' 
                       : 'Pour la démo: manager@example.com / password'}
                   </div>
                 </CardFooter>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import PageContainer from '@/components/layout/PageContainer';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import { Calendar as CalendarIcon, Check, X, Clock } from 'lucide-react';
 const absenceRequests = [
   {
     id: 1,
-    employee: 'John Doe',
+    employee: 'Reda',
     startDate: new Date(2023, 5, 15),
     endDate: new Date(2023, 5, 17),
     reason: 'Family emergency',
@@ -27,7 +26,7 @@ const absenceRequests = [
   },
   {
     id: 2,
-    employee: 'Jane Smith',
+    employee: 'Sami',
     startDate: new Date(2023, 5, 20),
     endDate: new Date(2023, 5, 24),
     reason: 'Vacation',
@@ -36,7 +35,7 @@ const absenceRequests = [
   },
   {
     id: 3,
-    employee: 'Mike Johnson',
+    employee: 'Afif',
     startDate: new Date(2023, 6, 5),
     endDate: new Date(2023, 6, 7),
     reason: 'Medical appointment',
@@ -45,7 +44,7 @@ const absenceRequests = [
   },
   {
     id: 4,
-    employee: 'Emily Wilson',
+    employee: 'Reda',
     startDate: new Date(2023, 5, 25),
     endDate: new Date(2023, 5, 25),
     reason: 'Personal day',

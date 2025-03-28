@@ -73,8 +73,8 @@ const mockShifts: Shift[] = [
     startTime: '15:00',
     endTime: '23:00',
     status: 'confirmé',
-    restaurant: 'Burger Central',
-    coworkers: ['Emma S.', 'Michael T.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami', 'Afif']
   },
   {
     id: '2',
@@ -82,8 +82,8 @@ const mockShifts: Shift[] = [
     startTime: '18:00',
     endTime: '00:00',
     status: 'confirmé',
-    restaurant: 'Burger Central',
-    coworkers: ['Thomas L.', 'Sophie M.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami', 'Afif']
   },
   {
     id: '3',
@@ -91,8 +91,8 @@ const mockShifts: Shift[] = [
     startTime: '11:00',
     endTime: '19:00',
     status: 'en attente',
-    restaurant: 'Burger Central',
-    coworkers: ['Marie C.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Afif']
   },
   {
     id: '4',
@@ -100,8 +100,8 @@ const mockShifts: Shift[] = [
     startTime: '18:00',
     endTime: '02:00',
     status: 'modifié',
-    restaurant: 'Burger Central',
-    coworkers: ['Alex D.', 'Julie B.', 'Thomas L.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami', 'Afif']
   },
   {
     id: '5',
@@ -109,8 +109,8 @@ const mockShifts: Shift[] = [
     startTime: '09:00',
     endTime: '17:00',
     status: 'confirmé',
-    restaurant: 'Burger Downtown',
-    coworkers: ['Paul R.', 'Sandra T.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami']
   },
   {
     id: '6',
@@ -118,8 +118,8 @@ const mockShifts: Shift[] = [
     startTime: '13:00',
     endTime: '21:00',
     status: 'confirmé',
-    restaurant: 'Burger Downtown',
-    coworkers: ['François L.', 'Claire B.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami', 'Afif']
   },
   {
     id: '7',
@@ -127,8 +127,8 @@ const mockShifts: Shift[] = [
     startTime: '10:00',
     endTime: '18:00',
     status: 'en attente',
-    restaurant: 'Burger Express',
-    coworkers: ['Lucas M.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Afif']
   },
   {
     id: '8',
@@ -136,8 +136,8 @@ const mockShifts: Shift[] = [
     startTime: '09:00',
     endTime: '17:00',
     status: 'confirmé',
-    restaurant: 'Burger Central',
-    coworkers: ['Sophie K.', 'Thomas P.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami', 'Afif']
   },
   {
     id: '9',
@@ -145,8 +145,8 @@ const mockShifts: Shift[] = [
     startTime: '14:00',
     endTime: '22:00',
     status: 'confirmé',
-    restaurant: 'Burger Express',
-    coworkers: ['Marie L.', 'Pierre D.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami', 'Afif']
   },
   {
     id: '10',
@@ -154,8 +154,8 @@ const mockShifts: Shift[] = [
     startTime: '10:00',
     endTime: '18:00',
     status: 'en attente',
-    restaurant: 'Burger Downtown',
-    coworkers: ['Jean T.']
+    restaurant: 'Burger Staff Sync',
+    coworkers: ['Sami']
   },
 ];
 

@@ -55,11 +55,9 @@ type Employee = {
 
 // Données mockées pour les employés
 const mockEmployees: Employee[] = [
-  { id: 1, name: 'John Doe', email: 'john.doe@example.com', phone: '(555) 123-4567', avatarUrl: '' },
-  { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', phone: '(555) 987-6543', avatarUrl: '' },
-  { id: 3, name: 'Michael Johnson', email: 'michael.j@example.com', phone: '(555) 456-7890', avatarUrl: '' },
-  { id: 4, name: 'Emily Wilson', email: 'emily.w@example.com', phone: '(555) 789-0123', avatarUrl: '' },
-  { id: 5, name: 'David Brown', email: 'david.b@example.com', phone: '(555) 234-5678', avatarUrl: '' },
+  { id: 1, name: 'Reda', email: 'reda@burger-staff.com', phone: '(+212) 601-234567', avatarUrl: '' },
+  { id: 2, name: 'Sami', email: 'sami@burger-staff.com', phone: '(+212) 602-345678', avatarUrl: '' },
+  { id: 3, name: 'Afif', email: 'afif@burger-staff.com', phone: '(+212) 603-456789', avatarUrl: '' }
 ];
 
 // Données mockées pour les shifts sur plusieurs jours
@@ -75,7 +73,8 @@ const generateMockShifts = (): Shift[] => {
     const shiftsCount = Math.floor(Math.random() * 4) + 3;
     
     for (let j = 0; j < shiftsCount; j++) {
-      const employeeId = Math.floor(Math.random() * 5) + 1;
+      // Utiliser seulement les ID 1, 2, 3 pour Reda, Sami et Afif
+      const employeeId = Math.floor(Math.random() * 3) + 1;
       
       // Horaires différents pour diversifier
       const startHours = [

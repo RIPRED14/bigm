@@ -28,6 +28,7 @@ import EmployeeDashboard from "./pages/employee/Dashboard";
 import EmployeeShifts from "./pages/employee/Shifts";
 import ShiftExchanges from "./pages/employee/ShiftExchanges";
 import EmployeeProfile from "./pages/employee/Profile";
+import EmployeeRecipes from "./pages/employee/Recipes";
 
 const queryClient = new QueryClient();
 
@@ -228,6 +229,7 @@ const AppContent = () => {
               <Route path="/employee/shifts" element={isLoggedIn ? <EmployeeShifts /> : <Navigate to="/login" replace />} />
               <Route path="/employee/exchanges" element={isLoggedIn ? <ShiftExchanges /> : <Navigate to="/login" replace />} />
               <Route path="/employee/profile" element={isLoggedIn ? <EmployeeProfile /> : <Navigate to="/login" replace />} />
+              <Route path="/employee/recipes" element={isLoggedIn ? <EmployeeRecipes /> : <Navigate to="/login" replace />} />
               
               {/* Redirections pour les routes obsolètes */}
               <Route path="/employee/absences" element={<Navigate to="/employee/exchanges" replace />} />
